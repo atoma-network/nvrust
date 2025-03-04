@@ -1,0 +1,3 @@
+[submodule "external/nvtrust"]
+	path = external/nvtrust
+	url = https://github.com/NVIDIA/nvtrust.git
