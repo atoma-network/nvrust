@@ -5,4 +5,6 @@ edition = "2021"
 
 [dependencies]
 thiserror = "2.0.12"
-nvml-wrapper = { git = "https://github.com/rust-nvml/nvml-wrapper", branch = "main" }
+nvml-wrapper = { version = "0.8.0" }
+nvml-wrapper-sys = { version = "0.8.0" }
+libloading = "0.8.1"
