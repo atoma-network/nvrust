@@ -100,6 +100,12 @@ pub mod nras_token {
         pub additional_claims: HashMap<String, Value>,
     }
 
+    #[derive(Clone, Debug, Deserialize, Serialize)]
+    pub struct Claims {
+        #[serde(flatten)]
+        pub claims: HashMap<String, Value>,
+    }
+
     /// Decodes and verifies an NVIDIA Remote Attestation Service (NRAS) JWT token.
     ///
     /// This function performs the following steps:
@@ -140,7 +146,7 @@ pub mod nras_token {
     pub async fn decode_nras_token(
         verifier_url: &str,
         token: &str,
-    ) -> Result<NvidiaAttestationClaims> {
+    ) -> Result<Claims> {
         let jwks_url = create_jwks_url(verifier_url)?;
         let client = Client::builder().timeout(DEFAULT_TIMEOUT).build()?;
         let jwks_data: Value = client.get(&jwks_url).send().await?.json().await?;
@@ -228,11 +234,10 @@ pub mod nras_token {
     ///
     /// * `Result<NvidiaAttestationClaims>` - The decoded token claims or an error
     #[tracing::instrument(skip(token, cert_der))]
-    fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<NvidiaAttestationClaims> {
+    fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<Claims> {
         // Parse the X.509 certificate
         dbg!("cert_der: {:?}", cert_der);
         let (_, cert) = X509Certificate::from_der(cert_der)?;
-
         // Extract the public key from the certificate
         dbg!("cert: {:?}", cert.clone());
         let public_key = cert.public_key();
@@ -249,7 +254,7 @@ pub mod nras_token {
 
         // Decode the token with our custom claims structure
         dbg!("token: {:?}", token);
-        let token_data = decode::<NvidiaAttestationClaims>(token, &decoding_key, &validation)?;
+        let token_data = decode::<Claims>(token, &decoding_key, &validation)?;
         dbg!("token_data: {:?}", token_data.clone());
         Ok(token_data.claims)
     }

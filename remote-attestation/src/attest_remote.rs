@@ -134,7 +134,12 @@ pub async fn attest_remote(
             let main_jwt_token = crate::utils::get_overall_claims_token(&response_json)?;
             let decoded_main_jwt_token =
                 crate::utils::nras_token::decode_nras_token(verifier_url, &main_jwt_token).await?;
-            let attestation_result = decoded_main_jwt_token.overall_attestation_result;
+            let attestation_result = decoded_main_jwt_token
+                .claims
+                .get("overall_attestation_result")
+                .expect("overall_attestation_result not found")
+                .as_bool()
+                .expect("overall_attestation_result is not a boolean");
             Ok((attestation_result, response_json))
         }
         Err(e) => {
