@@ -14,6 +14,53 @@ use crate::{
     utils::get_allow_hold_cert,
 };
 
+/// Performs remote attestation of GPU devices by sending evidence to a verification service.
+///
+/// This function sends GPU evidence to a remote attestation service (NRAS) and processes
+/// the verification result. It's used to verify the authenticity and integrity of NVIDIA GPUs.
+///
+/// # Arguments
+///
+/// * `gpu_evidence_list` - A slice of `DeviceEvidence` containing attestation data from GPUs
+/// * `nonce` - A unique string value to prevent replay attacks
+/// * `verifier_url` - Optional URL of the verification service. If `None`, uses the default URL
+/// * `allow_hold_cert` - Optional flag to allow certificate hold status. If `None`, uses the system default
+/// * `timeout` - Optional request timeout. If `None`, uses the default timeout
+///
+/// # Returns
+///
+/// A `Result` containing a tuple with:
+/// * A boolean indicating the overall attestation result (true = passed, false = failed)
+/// * The complete JSON response from the attestation service
+///
+/// # Errors
+///
+/// Returns `AttestError` if:
+/// * The HTTP request fails
+/// * The server returns a non-success status code
+/// * The response cannot be parsed
+/// * JWT token validation fails
+///
+/// # Example
+///
+/// ```
+/// use your_crate::{attest_remote, DeviceEvidence};
+/// 
+/// async fn example() -> Result<(), Box<dyn std::error::Error>> {
+///     let evidence = vec![/* DeviceEvidence instances */];
+///     let nonce = "unique-nonce-value";
+///     
+///     let (attestation_passed, response) = attest_remote(&evidence, nonce, None, None, None).await?;
+///     
+///     if attestation_passed {
+///         println!("GPU attestation successful!");
+///     } else {
+///         println!("GPU attestation failed!");
+///     }
+///     
+///     Ok(())
+/// }
+/// ```
 #[instrument(
     level = "debug",
     name = "attest_remote",
