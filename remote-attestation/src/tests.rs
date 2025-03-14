@@ -19,19 +19,23 @@ fn read_working_evidence() -> (Vec<DeviceEvidence>, String) {
 
 fn generate_new_evidence() -> (Vec<DeviceEvidence>, String) {
     let nvml = Nvml::init().expect("Failed to initialize NVML");
-    let device = nvml.device_by_index(0).expect("Failed to get device");
+    let num_devices = nvml.device_count().expect("Failed to get device count");
     let nonce = rand::thread_rng().gen::<[u8; 32]>();
-    let attestation_report = device
-        .confidential_compute_gpu_attestation_report(nonce)
-        .expect("Failed to get report");
-    let certificate = device
-        .confidential_compute_gpu_certificate()
-        .expect("Failed to get certificate");
-    let evidence = vec![DeviceEvidence {
-        certificate: STANDARD.encode(certificate.attestation_cert_chain),
-        evidence: STANDARD.encode(attestation_report.attestation_report),
-    }];
-    (evidence, hex::encode(nonce))
+    let mut evidence_vec = Vec::with_capacity(num_devices as usize);
+    for i in 0..num_devices {
+        let device = nvml.device_by_index(i).expect("Failed to get device");
+        let attestation_report = device
+            .confidential_compute_gpu_attestation_report(nonce)
+            .expect("Failed to get report");
+        let certificate = device
+            .confidential_compute_gpu_certificate()
+            .expect("Failed to get certificate");
+        evidence_vec.push(DeviceEvidence {
+            certificate: STANDARD.encode(certificate.attestation_cert_chain),
+            evidence: STANDARD.encode(attestation_report.attestation_report),
+        });
+    }
+    (evidence_vec, hex::encode(nonce))
 }
 
 #[tokio::test]
