@@ -130,7 +130,6 @@ pub async fn attest_remote(
                 level = "attest_remote",
                 "Attestation request successful, response: {response_json}",
             );
-            dbg!(&response_json);
             let main_jwt_token = crate::utils::get_overall_claims_token(&response_json)?;
             let decoded_main_jwt_token =
                 crate::utils::nras_token::decode_nras_token(verifier_url, &main_jwt_token).await?;

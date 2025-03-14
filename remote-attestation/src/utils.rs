@@ -82,10 +82,7 @@ pub mod nras_token {
     use serde_json::Value;
     use std::collections::HashMap;
     use url::Url;
-    use x509_parser::{
-        asn1_rs::ToDer,
-        prelude::{FromDer, X509Certificate},
-    };
+    use x509_parser::prelude::{FromDer, X509Certificate};
 
     /// Custom claims structure for NVIDIA attestation tokens.
     ///
@@ -149,22 +146,22 @@ pub mod nras_token {
         let jwks_data: Value = client.get(&jwks_url).send().await?.json().await?;
         let header = decode_header(token)?;
         let kid = header.kid.ok_or_else(|| {
-            AttestError::InvalidJwtToken(format!("Kid not found in token header"))
+            AttestError::InvalidJwtToken("Kid not found in token header".to_string())
         })?;
         let matching_key = get_matching_key(&jwks_data, &kid).ok_or_else(|| {
-            AttestError::InvalidJwtToken(format!("Matching key not found in JWKS data"))
+            AttestError::InvalidJwtToken("Matching key not found in JWKS data".to_string())
         })?;
         let x5c = matching_key
             .get("x5c")
             .and_then(|x| x.as_array())
             .ok_or_else(|| {
-                AttestError::InvalidJwtToken(format!("No x5c field in the matching key"))
+                AttestError::InvalidJwtToken("No x5c field in the matching key".to_string())
             })?;
-        let cert_b64 = x5c.get(0).and_then(|c| c.as_str()).ok_or_else(|| {
-            AttestError::InvalidJwtToken(format!("No certificate found in x5c field"))
+        let cert_b64 = x5c.first().and_then(|c| c.as_str()).ok_or_else(|| {
+            AttestError::InvalidJwtToken("No certificate found in x5c field".to_string())
         })?;
         let cert_der = STANDARD.decode(cert_b64)?;
-        decode_jwt_token(&token, &cert_der)
+        decode_jwt_token(token, &cert_der)
     }
 
     /// Generate JWKS URL using the verifier URL
@@ -212,11 +209,9 @@ pub mod nras_token {
             .and_then(|keys| keys.as_array())
             .and_then(|keys_array| {
                 // Iterate through the keys to find a matching kid
-                keys_array.iter().find(|key| {
-                    key.get(KID_KEY)
-                        .and_then(|k| k.as_str())
-                        .map_or(false, |k| k == kid)
-                })
+                keys_array
+                    .iter()
+                    .find(|key| (key.get(KID_KEY).and_then(|k| k.as_str()) == Some(kid)))
             })
     }
 
@@ -232,24 +227,11 @@ pub mod nras_token {
     /// * `Result<NvidiaAttestationClaims>` - The decoded token claims or an error
     #[tracing::instrument(skip(token, cert_der))]
     fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<NvidiaAttestationClaims> {
-        // Parse the X.509 certificate
         let (_, cert) = X509Certificate::from_der(cert_der)?;
-        // Extract the public key from the certificate
-        let public_key = cert.public_key();
         let sec1_der = cert.public_key().subject_public_key.data.as_ref();
-
-        // Create a decoding key from the SEC1 DER-encoded public key
         let decoding_key = DecodingKey::from_ec_der(sec1_der);
-
-        dbg!("decoding_key");
-
-        // Set up validation parameters
         let validation = Validation::new(Algorithm::ES384);
-
-        // Decode the token with our custom claims structure
-
         let token_data = decode::<NvidiaAttestationClaims>(token, &decoding_key, &validation)?;
-        dbg!("token_data");
         Ok(token_data.claims)
     }
 }

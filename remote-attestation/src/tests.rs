@@ -48,6 +48,7 @@ async fn test_attest_working_evidence() {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);
+            assert!(attestation_passed);
         }
         Err(e) => {
             panic!("Failed to attest remote: {}", e);
