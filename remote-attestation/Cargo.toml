@@ -1,0 +1,20 @@
+[package]
+name = "remote-attestation"
+version = "0.1.0"
+edition = "2021"
+description = "Remote attestation for confidential compute NVIDIA GPUs"
+license = "MIT OR Apache-2.0"
+authors = ["Atoma Network"]
+
+[dependencies]
+base64 = { workspace = true }
+jsonwebtoken = { workspace = true }
+once_cell = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+x509-parser = { workspace = true }
