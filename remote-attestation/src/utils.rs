@@ -204,7 +204,6 @@ pub mod nras_token {
 
         // Construct the JWKS URL
         let jwks_url = format!("{scheme}://{host}{port}/.well-known/jwks.json");
-
         Ok(jwks_url)
     }
 

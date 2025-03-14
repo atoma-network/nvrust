@@ -6,6 +6,8 @@
 pub mod attest_remote;
 pub mod constants;
 pub mod errors;
+#[cfg(test)]
+mod tests;
 pub mod types;
 pub mod utils;
 

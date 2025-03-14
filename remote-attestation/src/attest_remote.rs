@@ -21,7 +21,7 @@ use crate::{
 ///
 /// # Arguments
 ///
-/// * `gpu_evidence_list` - A slice of `DeviceEvidence` containing attestation data from GPUs
+/// * `gpu_evidences` - A slice of `DeviceEvidence` containing attestation data from GPUs
 /// * `nonce` - A unique string value to prevent replay attacks
 /// * `verifier_url` - Optional URL of the verification service. If `None`, uses the default URL
 /// * `allow_hold_cert` - Optional flag to allow certificate hold status. If `None`, uses the system default
@@ -45,7 +45,7 @@ use crate::{
 ///
 /// ```rust,ignore
 /// use remote_attestation::{attest_remote, DeviceEvidence};
-/// 
+///
 /// async fn example() -> Result<(), Box<dyn std::error::Error>> {
 ///     let evidence = vec![/* DeviceEvidence instances */];
 ///     let nonce = "unique-nonce-value";
@@ -64,7 +64,7 @@ use crate::{
 #[instrument(
     level = "debug",
     name = "attest_remote",
-    skip(gpu_evidence_list, nonce, verifier_url, allow_hold_cert),
+    skip(gpu_evidences, nonce, verifier_url, allow_hold_cert),
     fields(
         nonce = %nonce,
         verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL),
@@ -72,7 +72,7 @@ use crate::{
     )
 )]
 pub async fn attest_remote(
-    gpu_evidence_list: &[DeviceEvidence],
+    gpu_evidences: &[DeviceEvidence],
     nonce: &str,
     verifier_url: Option<&str>,
     allow_hold_cert: Option<bool>,
@@ -90,7 +90,7 @@ pub async fn attest_remote(
     }
     let payload = json!({
         NONCE_KEY: nonce,
-        EVIDENCE_LIST_KEY: gpu_evidence_list,
+        EVIDENCE_LIST_KEY: gpu_evidences,
         ARCH_KEY: HOPPER_ARCH,
     });
     debug!(
@@ -107,7 +107,14 @@ pub async fn attest_remote(
         .json(&payload)
         .send()
         .instrument(request_span)
-        .await?;
+        .await
+        .map_err(|e| {
+            error!(
+                level = "attest_remote",
+                "Failed to send attestation request: {e}"
+            );
+            AttestError::ParseResponseError(e)
+        })?;
     if !response.status().is_success() {
         error!(
             level = "attest_remote",
@@ -124,6 +131,7 @@ pub async fn attest_remote(
                 "Attestation request successful, response: {response_json}",
             );
             let main_jwt_token = crate::utils::get_overall_claims_token(&response_json)?;
+            dbg!(&main_jwt_token);
             let decoded_main_jwt_token =
                 crate::utils::nras_token::decode_nras_token(verifier_url, &main_jwt_token).await?;
             let attestation_result = decoded_main_jwt_token.overall_attestation_result;

@@ -3,7 +3,7 @@ use std::time::Duration;
 /// Default URL for the remote GPU verifier service.
 ///
 /// This URL is used as the default endpoint for remote attestation of GPU devices.
-pub const REMOTE_GPU_VERIFIER_SERVICE_URL: &str = "https://remote-gpu-verifier.com";
+pub const REMOTE_GPU_VERIFIER_SERVICE_URL: &str = "https://nras.attestation.nvidia.com/v3/attest/gpu";
 
 /// Environment variable key for certificate hold status.
 /// This key is used to check if certificates should be allowed to be held.
