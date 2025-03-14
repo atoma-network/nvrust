@@ -268,7 +268,7 @@ pub mod nras_token {
 
         // Decode the token with our custom claims structure
         let token_data = decode::<NvidiaAttestationClaims>(token, &decoding_key, &validation)?;
-        dbg!("token_data: {:?}", token_data);
+        dbg!("token_data: {:?}", token_dat.clone());
         Ok(token_data.claims)
     }
 }
