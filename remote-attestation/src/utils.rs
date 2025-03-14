@@ -246,14 +246,19 @@ pub mod nras_token {
     #[tracing::instrument(skip(token, cert_der))]
     fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<NvidiaAttestationClaims> {
         // Parse the X.509 certificate
+        dbg!("cert_der: {:?}", cert_der);
         let (_, cert) = X509Certificate::from_der(cert_der)?;
 
         // Extract the public key from the certificate
+        dbg!("cert: {:?}", cert.clone());
         let public_key = cert.public_key();
+        dbg!("public_key: {:?}", public_key);
         let public_key_data = public_key.raw;
+        dbg!("public_key_data: {:?}", public_key_data);
 
         // Create a decoding key from the public key
         let decoding_key = DecodingKey::from_ec_der(public_key_data);
+        dbg!("decoding_key");
 
         // Set up validation parameters
         let mut validation = Validation::new(Algorithm::ES384);
@@ -263,7 +268,7 @@ pub mod nras_token {
 
         // Decode the token with our custom claims structure
         let token_data = decode::<NvidiaAttestationClaims>(token, &decoding_key, &validation)?;
-
+        dbg!("token_data: {:?}", token_data);
         Ok(token_data.claims)
     }
 }
