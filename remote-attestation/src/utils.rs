@@ -89,7 +89,7 @@ pub mod nras_token {
     /// This struct represents the claims contained in a JWT token issued by NVIDIA's
     /// Remote Attestation Service (NRAS). It includes standard JWT fields like issuer,
     /// subject, and expiration time, as well as NVIDIA-specific attestation results.   
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct NvidiaAttestationClaims {
         /// Boolean indicating the overall attestation result
         #[serde(rename = "x-nvidia-overall-att-result")]
