@@ -1,27 +1,16 @@
-use base64::{engine::general_purpose::STANDARD, Engine};
-use nvml_wrapper::Nvml;
+use std::{fs, path::Path};
+
 use rand::Rng;
 
 use crate::{attest_remote, DeviceEvidence};
 
 fn generate_new_device_evidence() -> (DeviceEvidence, String) {
-    let nvml = Nvml::init().expect("Failed to initialize NVML");
-    let device = nvml.device_by_index(0).expect("Failed to get device");
+    let file = Path::new("./evidence/evidence.json");
+    let evidence = fs::read_to_string(file).expect("Failed to read evidence file");
+    let evidence: DeviceEvidence =
+        serde_json::from_str(&evidence).expect("Failed to parse evidence");
     let nonce = rand::thread_rng().gen::<[u8; 32]>();
-    let report = device
-        .confidential_compute_gpu_attestation_report(nonce)
-        .expect("Failed to get report")
-        .attestation_report;
-    let certificate = device
-        .confidential_compute_gpu_certificate()
-        .expect("Failed to get certificate")
-        .attestation_cert_chain;
-    let evidence = DeviceEvidence {
-        evidence: STANDARD.encode(report),
-        certificate: STANDARD.encode(certificate),
-    };
-    let nonce_hex = hex::encode(nonce);
-    (evidence, nonce_hex)
+    (evidence, hex::encode(nonce))
 }
 
 #[tokio::test]
