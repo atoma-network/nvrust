@@ -82,7 +82,10 @@ pub mod nras_token {
     use serde_json::Value;
     use std::collections::HashMap;
     use url::Url;
-    use x509_parser::prelude::{FromDer, X509Certificate};
+    use x509_parser::{
+        asn1_rs::ToDer,
+        prelude::{FromDer, X509Certificate},
+    };
 
     /// Custom claims structure for NVIDIA attestation tokens.
     ///
@@ -98,12 +101,6 @@ pub mod nras_token {
         /// Map containing any additional claims present in the token
         #[serde(flatten)]
         pub additional_claims: HashMap<String, Value>,
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct Claims {
-        #[serde(flatten)]
-        pub claims: HashMap<String, Value>,
     }
 
     /// Decodes and verifies an NVIDIA Remote Attestation Service (NRAS) JWT token.
@@ -146,7 +143,7 @@ pub mod nras_token {
     pub async fn decode_nras_token(
         verifier_url: &str,
         token: &str,
-    ) -> Result<Claims> {
+    ) -> Result<NvidiaAttestationClaims> {
         let jwks_url = create_jwks_url(verifier_url)?;
         let client = Client::builder().timeout(DEFAULT_TIMEOUT).build()?;
         let jwks_data: Value = client.get(&jwks_url).send().await?.json().await?;
@@ -234,28 +231,26 @@ pub mod nras_token {
     ///
     /// * `Result<NvidiaAttestationClaims>` - The decoded token claims or an error
     #[tracing::instrument(skip(token, cert_der))]
-    fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<Claims> {
+    fn decode_jwt_token(token: &str, cert_der: &[u8]) -> Result<NvidiaAttestationClaims> {
         // Parse the X.509 certificate
-        dbg!("cert_der: {:?}", cert_der);
         let (_, cert) = X509Certificate::from_der(cert_der)?;
         // Extract the public key from the certificate
-        dbg!("cert: {:?}", cert.clone());
         let public_key = cert.public_key();
-        dbg!("public_key: {:?}", public_key);
-        let public_key_data = public_key.raw;
-        dbg!("public_key_data: {:?}", public_key_data);
+        let public_key_data = public_key
+            .subject_public_key
+            .to_der_vec()
+            .expect("Failed to convert public key to DER");
 
         // Create a decoding key from the public key
-        let decoding_key = DecodingKey::from_ec_der(public_key_data);
+        let decoding_key = DecodingKey::from_ec_der(&public_key_data);
         dbg!("decoding_key");
 
         // Set up validation parameters
-        let mut validation = Validation::new(Algorithm::ES384);
+        let validation = Validation::new(Algorithm::ES384);
 
         // Decode the token with our custom claims structure
-        dbg!("token: {:?}", token);
-        let token_data = decode::<Claims>(token, &decoding_key, &validation)?;
-        dbg!("token_data: {:?}", token_data.clone());
+
+        let token_data = decode::<NvidiaAttestationClaims>(token, &decoding_key, &validation)?;
         Ok(token_data.claims)
     }
 }

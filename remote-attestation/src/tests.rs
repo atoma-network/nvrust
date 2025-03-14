@@ -35,7 +35,10 @@ fn generate_new_evidence() -> (Vec<DeviceEvidence>, String) {
             evidence: STANDARD.encode(attestation_report.attestation_report),
         });
     }
-    (evidence_vec, "931d8dd0add203ac3d8b4fbde75e115278eefcdceac5b87671a748f32364dfcb".to_string())
+    (
+        evidence_vec,
+        "931d8dd0add203ac3d8b4fbde75e115278eefcdceac5b87671a748f32364dfcb".to_string(),
+    )
 }
 
 #[tokio::test]
