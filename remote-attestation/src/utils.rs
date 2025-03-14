@@ -236,10 +236,10 @@ pub mod nras_token {
         let (_, cert) = X509Certificate::from_der(cert_der)?;
         // Extract the public key from the certificate
         let public_key = cert.public_key();
-        let spki_der = cert.tbs_certificate.subject_pki.raw;
-    
-        // Create a decoding key from the DER-encoded public key
-        let decoding_key = DecodingKey::from_ec_der(&spki_der);
+        let sec1_der = cert.public_key().subject_public_key.data.as_ref();
+
+        // Create a decoding key from the SEC1 DER-encoded public key
+        let decoding_key = DecodingKey::from_ec_der(sec1_der);
 
         dbg!("decoding_key");
 
