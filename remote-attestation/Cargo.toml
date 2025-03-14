@@ -11,6 +11,7 @@ base64 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
 once_cell = { workspace = true }
+nvml-wrapper = { workspace = true }
 rand = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }
