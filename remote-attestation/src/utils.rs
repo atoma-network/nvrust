@@ -95,22 +95,6 @@ pub mod nras_token {
         #[serde(rename = "x-nvidia-overall-att-result")]
         pub overall_attestation_result: bool,
 
-        /// The entity that issued the token (iss claim)
-        #[serde(rename = "iss")]
-        pub issuer: Option<String>,
-
-        /// The subject of the token (sub claim)
-        #[serde(rename = "sub")]
-        pub subject: Option<String>,
-
-        /// Token expiration time as Unix timestamp (exp claim)
-        #[serde(rename = "exp")]
-        pub expiration: Option<u64>,
-
-        /// Token issuance time as Unix timestamp (iat claim)
-        #[serde(rename = "iat")]
-        pub issued_at: Option<u64>,
-
         /// Map containing any additional claims present in the token
         #[serde(flatten)]
         pub additional_claims: HashMap<String, Value>,
