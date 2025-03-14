@@ -15,7 +15,7 @@ pub const NV_ALLOW_HOLD_CERT_KEY: &str = "NV_ALLOW_HOLD_CERT";
 /// certificate holds when checking the status of a certificate.
 ///
 /// # Example
-/// ```
+/// ```rust,ignore
 /// let mut headers = HeaderMap::new();
 /// headers.insert(NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, HeaderValue::from_static("true"));
 /// ```

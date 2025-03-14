@@ -43,8 +43,8 @@ use crate::{
 ///
 /// # Example
 ///
-/// ```
-/// use your_crate::{attest_remote, DeviceEvidence};
+/// ```rust,ignore
+/// use remote_attestation::{attest_remote, DeviceEvidence};
 /// 
 /// async fn example() -> Result<(), Box<dyn std::error::Error>> {
 ///     let evidence = vec![/* DeviceEvidence instances */];
