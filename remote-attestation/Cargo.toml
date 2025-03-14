@@ -11,17 +11,15 @@ base64 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
 once_cell = { workspace = true }
+rand = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 url = { workspace = true }
 x509-parser = { workspace = true }
 
 [dev-dependencies]
-blake3 = { workspace = true }
-flate2 = { workspace = true }
-sui-keys = { workspace = true }
-sui-sdk = { workspace = true }
+nvml-wrapper = { workspace = true }
