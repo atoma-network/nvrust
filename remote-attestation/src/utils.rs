@@ -246,9 +246,6 @@ pub mod nras_token {
 
         // Set up validation parameters
         let mut validation = Validation::new(Algorithm::ES384);
-        validation.validate_exp = true;
-        validation.validate_nbf = false;
-        validation.required_spec_claims.clear();
 
         // Decode the token with our custom claims structure
         dbg!("token: {:?}", token);
