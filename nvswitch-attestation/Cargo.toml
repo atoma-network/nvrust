@@ -5,3 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+libloading = "0.8.6"
+once_cell.workspace = true
+tracing = { workspace = true }
+
