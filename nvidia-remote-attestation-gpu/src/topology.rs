@@ -234,10 +234,10 @@ mod tests {
         //         .is_multi_gpu_protected_pcie_enabled()
         //         .expect("Failed to get multi-GPU protected PCIe status");
         // }
-        if !is_ppcie_multi_gpu_protected_enabled {
-            println!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
-            return;
-        }
+            // if !is_ppcie_multi_gpu_protected_enabled {
+            //     println!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
+            //     return;
+            // }
         let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
         let nonce = rand::thread_rng().gen::<[u8; 32]>();
         for i in 0..gpu_count {
