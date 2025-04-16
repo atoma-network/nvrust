@@ -148,7 +148,7 @@ fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>>
         let data_size = u16::from_le_bytes(data_size);
         let data_size = data_size as usize;
         current_position += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE;
-        if data_type == opaque_data_types::OPAQUE_FIELD_ID_SWITCH_GPU_PDIS {
+        if data_type == opaque_data_types::OPAQUE_FIELD_ID_SWITCH_PDI {
             return Ok(opaque_data[current_position..current_position + data_size].to_vec());
         }
         current_position += data_size;
@@ -277,5 +277,5 @@ pub mod opaque_data_field_size {
 
 pub mod opaque_data_types {
     /// The type of the opaque data field for Switch GPU PDIS.
-    pub const OPAQUE_FIELD_ID_SWITCH_GPU_PDIS: u16 = 26;
+    pub const OPAQUE_FIELD_ID_SWITCH_PDI: u16 = 22;
 }

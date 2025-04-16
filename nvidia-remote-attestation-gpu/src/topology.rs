@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use crate::device_pdis::{extract_device_pdis_in_gpu_attestation_report_data, SwitchDevicePdis};
 use crate::error::{NvidiaRemoteAttestationError, Result};
 use crate::swtich_pdis::extract_switch_pdis_in_gpu_attestation_report_data;
 use crate::swtich_pdis::opaque_data_field_size::PDI_DATA_FIELD_SIZE;
@@ -9,6 +10,9 @@ const NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS: usize = 8;
 
 /// The number of switch PDIS in the set of switch PDIS.
 const NUMBER_OF_SWITCH_PDIS: usize = 4;
+
+/// The number of switch attestation reports to check for topology.
+const NUMBER_OF_SWITCH_ATTESTATION_REPORTS: usize = 4;
 
 /// The disabled PDI value, to be removed from the set of switch PDIS.
 const DISABLED_PDI: &[u8] = &[0u8; PDI_DATA_FIELD_SIZE];
@@ -34,7 +38,7 @@ const DISABLED_PDI: &[u8] = &[0u8; PDI_DATA_FIELD_SIZE];
 ///
 /// # Returns
 ///
-/// Returns `Ok(())` if all topology checks pass:
+/// Returns `Ok(HashSet<[u8; PDI_DATA_FIELD_SIZE]>)` if all topology checks pass:
 ///   - The correct number of reports is provided.
 ///   - PDI extraction is successful for all reports.
 ///   - Each report contains the expected number of unique, enabled PDIs.
@@ -52,7 +56,9 @@ const DISABLED_PDI: &[u8] = &[0u8; PDI_DATA_FIELD_SIZE];
 /// * `NvidiaRemoteAttestationError::InvalidSwitchPdisTopology`: If the set of unique, enabled PDIs
 ///   derived from a report differs from the set derived from the first report processed.
 #[tracing::instrument(name = "gpu_topology_check", skip_all)]
-pub fn gpu_topology_check(gpu_attestation_reports: &[&[u8]]) -> Result<()> {
+pub fn gpu_topology_check(
+    gpu_attestation_reports: &[&[u8]],
+) -> Result<HashSet<[u8; PDI_DATA_FIELD_SIZE]>> {
     if gpu_attestation_reports.len() != NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS {
         tracing::error!(
             "Invalid number of GPU attestation reports: expected {}, got {}",
@@ -116,5 +122,88 @@ pub fn gpu_topology_check(gpu_attestation_reports: &[&[u8]]) -> Result<()> {
         }
     }
     tracing::info!("GPU topology check passed successfully");
+    Ok(unique_switch_pdis_set.expect("Unique switch PDIS set should be Some at this point"))
+}
+
+#[tracing::instrument(name = "switch_topology_check", skip_all, fields(num_gpus))]
+pub fn switch_topology_check(
+    switch_attestation_reports: &[&[u8]],
+    num_gpus: usize,
+    unique_switch_pdis_set: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
+) -> Result<()> {
+    if switch_attestation_reports.len() != NUMBER_OF_SWITCH_ATTESTATION_REPORTS {
+        tracing::error!(
+            "Invalid number of switch attestation reports: expected {}, got {}",
+            NUMBER_OF_SWITCH_ATTESTATION_REPORTS,
+            switch_attestation_reports.len()
+        );
+        return Err(
+            NvidiaRemoteAttestationError::InvalidSwitchAttestationReportsLength {
+                message: "Invalid number of switch attestation reports".to_string(),
+                expected_length: NUMBER_OF_SWITCH_ATTESTATION_REPORTS,
+                actual_length: switch_attestation_reports.len(),
+            },
+        );
+    }
+    let mut unique_switch_device_gpu_pdis_set: Option<HashSet<[u8; PDI_DATA_FIELD_SIZE]>> = None;
+    for report in switch_attestation_reports {
+        let SwitchDevicePdis {
+            switch_device_gpu_pdis,
+            switch_pdis,
+        } = match extract_device_pdis_in_gpu_attestation_report_data(report) {
+            Ok(switch_device_pdis) => switch_device_pdis,
+            Err(e) => {
+                tracing::error!(
+                    "Error extracting device PDIS from switch attestation report: {}",
+                    e
+                );
+                return Err(e);
+            }
+        };
+        if !unique_switch_pdis_set.contains(&switch_pdis) {
+            tracing::error!(
+                "Switch Topology check: The switch PDI reported in switch attestation report which is {:?} is not in the set of unique switch PDIS: {:?}",
+                switch_pdis,
+                unique_switch_pdis_set
+            );
+            return Err(NvidiaRemoteAttestationError::SwitchPdisNotFound);
+        }
+        let switch_device_gpu_pdis_set =
+            HashSet::<[u8; PDI_DATA_FIELD_SIZE]>::from_iter(switch_device_gpu_pdis);
+        if switch_device_gpu_pdis_set.len() != num_gpus {
+            tracing::error!(
+                "Switch Topology check: The number of switch device GPU PDIS is not equal to the number of GPUs: expected {}, got {}",
+                num_gpus,
+                switch_device_gpu_pdis_set.len()
+            );
+            return Err(
+                NvidiaRemoteAttestationError::InvalidSwitchDeviceGpuPdisLength {
+                    message: "Invalid number of switch device GPU PDIS".to_string(),
+                    expected_length: num_gpus,
+                    actual_length: switch_device_gpu_pdis_set.len(),
+                },
+            );
+        }
+        match unique_switch_device_gpu_pdis_set {
+            Some(ref set) => {
+                if set != &switch_device_gpu_pdis_set {
+                    tracing::error!("Invalid switch device GPU PDIS topology, we found a mismatch between the expected and actual switch device GPU PDIS topology: expected {:?}, got {:?}", set, switch_device_gpu_pdis_set);
+                    return Err(
+                        NvidiaRemoteAttestationError::InvalidSwitchDeviceGpuPdisTopology {
+                            message: "Invalid switch device GPU PDIS topology".to_string(),
+                            expected: set.clone(),
+                            actual: switch_device_gpu_pdis_set,
+                        },
+                    );
+                }
+            }
+            None => {
+                tracing::info!(
+                    "Switch Topology check: Setting initial unique switch device GPU PDIS"
+                );
+                unique_switch_device_gpu_pdis_set = Some(switch_device_gpu_pdis_set);
+            }
+        }
+    }
     Ok(())
 }
