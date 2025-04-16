@@ -182,12 +182,20 @@ fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>>
 fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize)> {
     let mut opaque_data_start = 0;
 
+    println!("SPDM measurement length: {:?}", spdm_measurement.len());
+    println!("opaque data start: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::SPDM_VERSION;
+    println!("opaque data start after SPDM_VERSION: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::REQUEST_RESPONSE_CODE;
+    println!("opaque data start after REQUEST_RESPONSE_CODE: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::PARAM1;
+    println!("opaque data start after PARAM1: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::PARAM2;
+    println!("opaque data start after PARAM2: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::NUMBER_OF_BLOCKS;
+    println!("opaque data start after NUMBER_OF_BLOCKS: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::MEASUREMENT_RECORD_LENGTH;
+    println!("opaque data start after MEASUREMENT_RECORD_LENGTH: {:?}", opaque_data_start);
 
     check_spdm_measurement_length(spdm_measurement, opaque_data_start, "Measurement Record")?;
 
@@ -197,10 +205,14 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
         spdm_measurement[opaque_data_start + 2],
         0, // Pad with 0 for the 4th byte
     ]) as usize;
+    println!("measurement_record_length: {:?}", measurement_record_length);
 
     opaque_data_start += measurement_record_length;
+    println!("opaque data start after MEASUREMENT_RECORD_LENGTH: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::NONCE;
+    println!("opaque data start after NONCE: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::OPAQUE_DATA;
+    println!("opaque data start after OPAQUE_DATA: {:?}", opaque_data_start);
 
     check_spdm_measurement_length(spdm_measurement, opaque_data_start, "Opaque Data")?;
 
@@ -208,7 +220,7 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
         spdm_measurement[opaque_data_start],
         spdm_measurement[opaque_data_start + 1],
     ]) as usize;
-
+    println!("opaque data length: {:?}", opaque_data_length);
     Ok((opaque_data_start, opaque_data_length))
 }
 
