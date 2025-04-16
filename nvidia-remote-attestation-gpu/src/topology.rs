@@ -226,14 +226,14 @@ mod tests {
             );
             return;
         }
-        let mut is_ppcie_multi_gpu_protected_enabled = true;
-        for i in 0..gpu_count {
-            is_ppcie_multi_gpu_protected_enabled &= nvml
-                .device_by_index(i)
-                .expect("Failed to get device by index")
-                .is_multi_gpu_protected_pcie_enabled()
-                .expect("Failed to get multi-GPU protected PCIe status");
-        }
+        // let mut is_ppcie_multi_gpu_protected_enabled = true;
+        // for i in 0..gpu_count {
+        //     is_ppcie_multi_gpu_protected_enabled &= nvml
+        //         .device_by_index(i)
+        //         .expect("Failed to get device by index")
+        //         .is_multi_gpu_protected_pcie_enabled()
+        //         .expect("Failed to get multi-GPU protected PCIe status");
+        // }
         if !is_ppcie_multi_gpu_protected_enabled {
             println!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
             return;
