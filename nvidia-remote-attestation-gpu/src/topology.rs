@@ -13,6 +13,44 @@ const NUMBER_OF_SWITCH_PDIS: usize = 4;
 /// The disabled PDI value, to be removed from the set of switch PDIS.
 const DISABLED_PDI: &[u8] = &[0u8; PDI_DATA_FIELD_SIZE];
 
+/// Performs a GPU topology check by verifying the consistency of NVSwitch PDI sets across multiple GPU attestation reports.
+///
+/// This function expects a specific number of attestation reports (`NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS`).
+/// It processes each report to extract its associated NVSwitch Platform Data Information (PDI) entries.
+/// For each report, it:
+/// 1. Extracts the list of PDIs using `extract_switch_pdis_in_gpu_attestation_report_data`.
+/// 2. Creates a set of unique PDIs from the list.
+/// 3. Removes a predefined `DISABLED_PDI` value from the set.
+/// 4. Verifies that the number of remaining unique PDIs matches `NUMBER_OF_SWITCH_PDIS`.
+/// 5. Compares this set of PDIs with the set derived from the first report. All subsequent reports
+///    must have the exact same set of unique, enabled PDIs.
+///
+/// The function uses `tracing` to log information about the check process and any errors encountered.
+///
+/// # Arguments
+///
+/// * `gpu_attestation_reports` - A slice containing references to the byte slices of individual
+///   GPU attestation reports.
+///
+/// # Returns
+///
+/// Returns `Ok(())` if all topology checks pass:
+///   - The correct number of reports is provided.
+///   - PDI extraction is successful for all reports.
+///   - Each report contains the expected number of unique, enabled PDIs.
+///   - The set of unique, enabled PDIs is identical across all provided reports.
+///
+/// # Errors
+///
+/// Returns an `Err(NvidiaRemoteAttestationError)` if any check fails:
+/// * `NvidiaRemoteAttestationError::InvalidGpuAttestationReportsLength`: If the number of
+///   reports in `gpu_attestation_reports` does not match `NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS`.
+/// * Errors propagated from `extract_switch_pdis_in_gpu_attestation_report_data`: If PDI extraction
+///   fails for any report (e.g., due to invalid report format, missing opaque data, etc.).
+/// * `NvidiaRemoteAttestationError::InvalidSwitchPdisLength`: If, after removing the disabled PDI,
+///   the number of unique PDIs in a report does not match `NUMBER_OF_SWITCH_PDIS`.
+/// * `NvidiaRemoteAttestationError::InvalidSwitchPdisTopology`: If the set of unique, enabled PDIs
+///   derived from a report differs from the set derived from the first report processed.
 #[tracing::instrument(name = "gpu_topology_check", skip_all)]
 pub fn gpu_topology_check(gpu_attestation_reports: &[&[u8]]) -> Result<()> {
     if gpu_attestation_reports.len() != NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS {
