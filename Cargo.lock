@@ -829,6 +829,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "nvidia-remote-attestation-gpu"
+version = "0.1.0"
+dependencies = [
+ "nvml-wrapper",
+ "once_cell",
+ "thiserror 2.0.12",
+ "tracing",
+]
+
+[[package]]
 name = "nvml-wrapper"
 version = "0.10.0"
 source = "git+https://github.com/atoma-network/nvml-wrapper?branch=main#c9b496b7e4e85c292fcf9e7abb4801ca5c318768"
