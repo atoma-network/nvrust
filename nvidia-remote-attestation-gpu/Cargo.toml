@@ -1,0 +1,11 @@
+[package]
+name = "nvidia-remote-attestation-gpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+nvml-wrapper = { workspace = true }
+once_cell.workspace = true
+thiserror = { workspace = true }
+tracing = { workspace = true }
