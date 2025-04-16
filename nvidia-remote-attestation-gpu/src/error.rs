@@ -35,8 +35,8 @@ pub enum NvidiaRemoteAttestationError {
         current_position: usize,
         opaque_data_length: usize,
     },
-    #[error("NV switch PIDS not found")]
-    NvSwitchPidsNotFound,
+    #[error("NV switch PDIS not found")]
+    NvSwitchPdisNotFound,
     #[error("Invalid switch PDIS length: {message}, length: {length}")]
     InvalidSwitchPdisLength { message: String, length: usize },
     #[error("Invalid number of GPU attestation reports: {message}, expected {expected_length}, got {actual_length}")]

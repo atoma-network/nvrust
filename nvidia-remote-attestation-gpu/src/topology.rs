@@ -74,7 +74,7 @@ pub fn gpu_topology_check(gpu_attestation_reports: &[&[u8]]) -> Result<()> {
                 Ok(switch_pdis) => switch_pdis,
                 Err(e) => {
                     tracing::error!(
-                        "Error extracting switch PIDS from GPU attestation report: {}",
+                        "Error extracting switch PDIS from GPU attestation report: {}",
                         e
                     );
                     return Err(e);

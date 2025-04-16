@@ -31,9 +31,9 @@ const LENGTH_OF_SPDM_GET_MEASUREMENT_REQUEST_MESSAGE: usize = 37;
 ///   `InvalidSpdmMeasurementLength`) if the SPDM measurement structure is invalid.
 /// * Errors propagated from `extract_switch_gpu_pdis_in_opaque_data` (e.g.,
 ///   `InvalidOpaqueDataType`, `InvalidOpaqueDataSize`, `InvalidOpaqueDataValue`,
-///   `NvSwitchPidsNotFound`) if the opaque data TLV structure is invalid or the
+///   `NvSwitchPdisNotFound`) if the opaque data TLV structure is invalid or the
 ///   `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS` field is missing or malformed.
-/// * Errors propagated from `extract_switch_pids` (e.g., `InvalidSwitchPidsLength`)
+/// * Errors propagated from `extract_switch_pdis` (e.g., `InvalidSwitchPdisLength`)
 ///   if the extracted concatenated PDI data length is not a multiple of the expected
 ///   individual PDI size.
 pub fn extract_switch_pdis_in_gpu_attestation_report_data(
@@ -52,19 +52,19 @@ pub fn extract_switch_pdis_in_gpu_attestation_report_data(
     let (opaque_data_start, opaque_data_length) = compute_opaque_data_position(spdm_measurement)?;
     let opaque_data = &spdm_measurement[opaque_data_start..opaque_data_start + opaque_data_length];
     let switch_gpu_pdis = extract_switch_gpu_pdis_in_opaque_data(opaque_data)?;
-    let switch_pids = extract_switch_pids(&switch_gpu_pdis)?;
-    Ok(switch_pids)
+    let switch_pdis = extract_switch_pdis(&switch_gpu_pdis)?;
+    Ok(switch_pdis)
 }
 
 /// Extracts individual PDI (Platform Data Information) entries from a concatenated byte slice.
 ///
-/// This function assumes that the input `switch_gpu_pids` slice is composed of one or more
+/// This function assumes that the input `switch_gpu_pdis` slice is composed of one or more
 /// PDI entries, each having a fixed size defined by `opaque_data_field_size::PDI_DATA_FIELD_SIZE`.
 /// It segments the input slice into these fixed-size chunks.
 ///
 /// # Arguments
 ///
-/// * `switch_gpu_pids` - A byte slice containing the concatenated PDI data, typically extracted
+/// * `switch_gpu_pdis` - A byte slice containing the concatenated PDI data, typically extracted
 ///   from the `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS` field of an SPDM measurement's opaque data.
 ///
 /// # Returns
@@ -74,29 +74,29 @@ pub fn extract_switch_pdis_in_gpu_attestation_report_data(
 ///
 /// # Errors
 ///
-/// Returns `NvidiaRemoteAttestationError::InvalidSwitchPidsLength` if the length of the
-/// `switch_gpu_pids` slice is not an exact multiple of `opaque_data_field_size::PDI_DATA_FIELD_SIZE`.
-fn extract_switch_pids(
-    switch_gpu_pids: &[u8],
+/// Returns `NvidiaRemoteAttestationError::InvalidSwitchPdisLength` if the length of the
+/// `switch_gpu_pdis` slice is not an exact multiple of `opaque_data_field_size::PDI_DATA_FIELD_SIZE`.
+fn extract_switch_pdis(
+    switch_gpu_pdis: &[u8],
 ) -> Result<Vec<[u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE]>> {
-    if switch_gpu_pids.len() % opaque_data_field_size::PDI_DATA_FIELD_SIZE != 0 {
+    if switch_gpu_pdis.len() % opaque_data_field_size::PDI_DATA_FIELD_SIZE != 0 {
         return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength {
             message: format!(
-                "Switch PIDS length is not a multiple of {}",
+                "Switch PDIS length is not a multiple of {}",
                 opaque_data_field_size::PDI_DATA_FIELD_SIZE
             ),
-            length: switch_gpu_pids.len(),
+            length: switch_gpu_pdis.len(),
         });
     }
-    let mut switch_pids = Vec::new();
+    let mut switch_pdis = Vec::new();
     let mut current_position = 0;
-    while current_position < switch_gpu_pids.len() {
-        let pdi = &switch_gpu_pids
+    while current_position < switch_gpu_pdis.len() {
+        let pdi = &switch_gpu_pdis
             [current_position..current_position + opaque_data_field_size::PDI_DATA_FIELD_SIZE];
-        switch_pids.push(pdi.try_into().unwrap());
+        switch_pdis.push(pdi.try_into().unwrap());
         current_position += opaque_data_field_size::PDI_DATA_FIELD_SIZE;
     }
-    Ok(switch_pids)
+    Ok(switch_pdis)
 }
 
 /// Extracts the Switch GPU PDI (Platform Data Information) data from the TLV-encoded opaque data.
@@ -122,7 +122,7 @@ fn extract_switch_pids(
 ///   for a TLV entry fails (e.g., due to insufficient data).
 /// * `NvidiaRemoteAttestationError::InvalidOpaqueDataSize`: If reading the size field
 ///   for a TLV entry fails (e.g., due to insufficient data).
-/// * `NvidiaRemoteAttestationError::NvSwitchPidsNotFound`: If the loop completes without
+/// * `NvidiaRemoteAttestationError::NvSwitchPdisNotFound`: If the loop completes without
 ///   finding a TLV entry with the type `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS`.
 fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>> {
     let mut current_position = 0;
@@ -153,7 +153,7 @@ fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>>
         }
         current_position += data_size;
     }
-    Err(NvidiaRemoteAttestationError::NvSwitchPidsNotFound)
+    Err(NvidiaRemoteAttestationError::NvSwitchPdisNotFound)
 }
 
 /// Computes the starting position and length of the opaque data within an SPDM measurement response.
