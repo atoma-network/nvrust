@@ -247,7 +247,7 @@ mod tests {
                 .confidential_compute_gpu_attestation_report(nonce)
                 .expect("Failed to get confidential compute GPU attestation report")
                 .attestation_report;
-            println!("GPU attestation report: {:x?}", gpu_attestation_report);
+            println!("GPU attestation report with length: {:?}", gpu_attestation_report.len());
             gpu_attestation_reports.push(gpu_attestation_report);
         }
         let result = gpu_topology_check(
