@@ -194,8 +194,6 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
     println!("opaque data start after PARAM2: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::NUMBER_OF_BLOCKS;
     println!("opaque data start after NUMBER_OF_BLOCKS: {:?}", opaque_data_start);
-    opaque_data_start += spdm_response_field_size::MEASUREMENT_RECORD_LENGTH;
-    println!("opaque data start after MEASUREMENT_RECORD_LENGTH: {:?}", opaque_data_start);
 
     check_spdm_measurement_length(spdm_measurement, opaque_data_start, "Measurement Record")?;
 
@@ -205,9 +203,11 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
         spdm_measurement[opaque_data_start + 2],
         0, // Pad with 0 for the 4th byte
     ]) as usize;
+
+    println!("opaque data start after MEASUREMENT_RECORD_LENGTH: {:?}", opaque_data_start);
     println!("measurement_record_length: {:?}", measurement_record_length);
 
-    opaque_data_start += measurement_record_length;
+    opaque_data_start += spdm_response_field_size::MEASUREMENT_RECORD_LENGTH + measurement_record_length;
     println!("opaque data start after MEASUREMENT_RECORD_LENGTH: {:?}", opaque_data_start);
     opaque_data_start += spdm_response_field_size::NONCE;
     println!("opaque data start after NONCE: {:?}", opaque_data_start);
