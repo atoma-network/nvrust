@@ -220,7 +220,7 @@ mod tests {
         let nvml = Nvml::init().unwrap();
         let gpu_count = nvml.device_count().unwrap();
         if gpu_count != 8 {
-            dbg!(
+            println!(
                 "Skipping GPU topology check, expected 8 GPUs, got {}",
                 gpu_count
             );
@@ -230,12 +230,12 @@ mod tests {
         for i in 0..gpu_count {
             is_ppcie_multi_gpu_protected_enabled &= nvml
                 .device_by_index(i)
-                .unwrap()
+                .expect("Failed to get device by index")
                 .is_multi_gpu_protected_pcie_enabled()
-                .unwrap();
+                .expect("Failed to get multi-GPU protected PCIe status");
         }
         if !is_ppcie_multi_gpu_protected_enabled {
-            dbg!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
+            println!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
             return;
         }
         let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
