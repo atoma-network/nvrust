@@ -51,4 +51,26 @@ pub enum NvidiaRemoteAttestationError {
         expected: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
         actual: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
     },
+    #[error("Invalid number of switch attestation reports: {message}, expected {expected_length}, got {actual_length}")]
+    InvalidSwitchAttestationReportsLength {
+        message: String,
+        expected_length: usize,
+        actual_length: usize,
+    },
+    #[error("Switch GPU PDIS not found")]
+    SwitchGpuPdisNotFound,
+    #[error("Switch PDIS not found")]
+    SwitchPdisNotFound,
+    #[error("Invalid number of switch device GPU PDIS: {message}, expected {expected_length}, got {actual_length}")]
+    InvalidSwitchDeviceGpuPdisLength {
+        message: String,
+        expected_length: usize,
+        actual_length: usize,
+    },
+    #[error("Invalid switch device GPU PDIS topology, we found a mismatch between the expected and actual switch device GPU PDIS topology: expected {expected:?}, got {actual:?}")]
+    InvalidSwitchDeviceGpuPdisTopology {
+        message: String,
+        expected: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
+        actual: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
+    },
 }
