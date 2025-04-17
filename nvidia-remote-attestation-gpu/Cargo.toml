@@ -12,3 +12,4 @@ tracing = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true }
+nscq = { workspace = true }

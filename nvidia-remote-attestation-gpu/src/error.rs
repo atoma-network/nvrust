@@ -73,4 +73,6 @@ pub enum NvidiaRemoteAttestationError {
         expected: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
         actual: HashSet<[u8; PDI_DATA_FIELD_SIZE]>,
     },
+    #[error("Invalid switch GPU PDIS length: {message}, length: {length}")]
+    InvalidSwitchGpuPdisLength { message: String, length: usize },
 }

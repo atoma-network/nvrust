@@ -149,7 +149,7 @@ pub fn switch_topology_check(
     for report in switch_attestation_reports {
         let SwitchDevicePdis {
             switch_device_gpu_pdis,
-            switch_pdis,
+            mut switch_pdis,
         } = match extract_device_pdis_in_gpu_attestation_report_data(report) {
             Ok(switch_device_pdis) => switch_device_pdis,
             Err(e) => {
@@ -160,6 +160,10 @@ pub fn switch_topology_check(
                 return Err(e);
             }
         };
+        // NOTE: We need to revert the order of the switch PDI, to be consistent with the byte order of the switch device PDI
+        // from the GPU attestation report. This is consistent with the original `nvtrust` implementation
+        // (see https://github.com/NVIDIA/nvtrust/blob/main/guest_tools/ppcie-verifier/ppcie/verifier/src/topology/validate_topology.py#L62)
+        switch_pdis.reverse();
         if !unique_switch_pdis_set.contains(&switch_pdis) {
             tracing::error!(
                 "Switch Topology check: The switch PDI reported in switch attestation report which is {:?} is not in the set of unique switch PDIS: {:?}",
@@ -261,5 +265,56 @@ mod tests {
         )
         .expect("Failed to check GPU topology");
         assert_eq!(result.len(), 4);
+    }
+
+    #[test]
+    fn test_switch_topology_check() {
+        // GPU Topology Check, we need to do it first to get the unique switch PDIS set
+        let start_time = std::time::Instant::now();
+        let nvml = Nvml::init().expect("Failed to initialize NVML");
+        let gpu_count = nvml.device_count().expect("Failed to get device count");
+        let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        for i in 0..gpu_count {
+            let gpu_attestation_report = nvml
+                .device_by_index(i)
+                .unwrap()
+                .confidential_compute_gpu_attestation_report(nonce)
+                .expect("Failed to get confidential compute GPU attestation report")
+                .attestation_report;
+            println!(
+                "GPU attestation report with length: {:?}",
+                gpu_attestation_report.len()
+            );
+            gpu_attestation_reports.push(gpu_attestation_report);
+        }
+        let unique_switch_pdis_set = gpu_topology_check(
+            &gpu_attestation_reports
+                .iter()
+                .map(|r| r.as_slice())
+                .collect::<Vec<_>>(),
+        )
+        .expect("Failed to check GPU topology");
+
+        println!("GPU Topology check took: {:?}", start_time.elapsed());
+
+        // NVSwitch Topology Check
+        let start_time = std::time::Instant::now();
+        let nscq = nscq::nscq_handler::NscqHandler::new().expect("Failed to initialize NSCQ");
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        let num_gpus = gpu_count as usize;
+        let switch_attestation_reports = nscq
+            .get_all_switch_attestation_report(&nonce)
+            .expect("Failed to get all switch attestation reports");
+        let result = switch_topology_check(
+            &switch_attestation_reports
+                .values()
+                .map(|report| report.as_slice())
+                .collect::<Vec<_>>(),
+            num_gpus,
+            unique_switch_pdis_set,
+        );
+        result.expect("Failed to check switch topology");
+        println!("Switch Topology check took: {:?}", start_time.elapsed());
     }
 }
