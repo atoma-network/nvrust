@@ -113,6 +113,16 @@ fn extract_switch_pdis(
 ) -> Result<([u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE], usize)> {
     let mut pos = 0;
     while pos < opaque_data.len() {
+        if pos
+            + opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE
+            + opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE
+            > opaque_data.len()
+        {
+            return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength {
+                message: "Switch PDIS is too short to contain a PDI".to_string(),
+                length: opaque_data.len(),
+            });
+        }
         let data_type = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]);
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE;
         let data_size = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]) as usize;
@@ -128,7 +138,10 @@ fn extract_switch_pdis(
                 });
             }
             pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE;
-            return Ok((opaque_data[pos..pos + data_size].try_into().unwrap(), pos));
+            return Ok((
+                opaque_data[pos..pos + data_size].try_into().unwrap(),
+                pos + data_size,
+            ));
         }
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE + data_size;
     }
