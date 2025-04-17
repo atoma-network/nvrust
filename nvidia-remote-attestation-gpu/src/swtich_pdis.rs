@@ -125,7 +125,6 @@ fn extract_switch_pdis(
 /// * `NvidiaRemoteAttestationError::NvSwitchPdisNotFound`: If the loop completes without
 ///   finding a TLV entry with the type `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS`.
 fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>> {
-    println!("opaque data: {:?}", opaque_data);
     let mut current_position = 0;
     while current_position < opaque_data.len() {
         let data_type = opaque_data
@@ -201,7 +200,6 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
     opaque_data_start +=
         spdm_response_field_size::MEASUREMENT_RECORD_LENGTH + measurement_record_length;
     opaque_data_start += spdm_response_field_size::NONCE;
-    opaque_data_start += spdm_response_field_size::OPAQUE_DATA;
 
     check_spdm_measurement_length(spdm_measurement, opaque_data_start, "Opaque Data")?;
 
@@ -209,6 +207,7 @@ fn compute_opaque_data_position(spdm_measurement: &[u8]) -> Result<(usize, usize
         spdm_measurement[opaque_data_start],
         spdm_measurement[opaque_data_start + 1],
     ]) as usize;
+    opaque_data_start += spdm_response_field_size::OPAQUE_DATA;
 
     Ok((opaque_data_start, opaque_data_length))
 }
