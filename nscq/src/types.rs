@@ -49,10 +49,10 @@ pub struct NscqObserverResult {
 #[derive(Debug)]
 #[repr(C)]
 pub struct NscqAttestationReport {
-    /// Report data
-    pub report: [u8; NSCQ_ATTESTATION_REPORT_SIZE],
     /// Report size
     report_size: u32,
+    /// Report data
+    pub report: [u8; NSCQ_ATTESTATION_REPORT_SIZE],
 }
 
 /// Attestation certificate for the NSCQ API
