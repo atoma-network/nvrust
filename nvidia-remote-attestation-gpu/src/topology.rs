@@ -207,3 +207,59 @@ pub fn switch_topology_check(
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use nvml_wrapper::Nvml;
+    use rand::Rng;
+
+    #[test]
+    fn test_gpu_topology_check() {
+        let nvml = Nvml::init().unwrap();
+        let gpu_count = nvml.device_count().unwrap();
+        if gpu_count != 8 {
+            println!(
+                "Skipping GPU topology check, expected 8 GPUs, got {}",
+                gpu_count
+            );
+            return;
+        }
+        // let mut is_ppcie_multi_gpu_protected_enabled = true;
+        // for i in 0..gpu_count {
+        //     is_ppcie_multi_gpu_protected_enabled &= nvml
+        //         .device_by_index(i)
+        //         .expect("Failed to get device by index")
+        //         .is_multi_gpu_protected_pcie_enabled()
+        //         .expect("Failed to get multi-GPU protected PCIe status");
+        // }
+        // if !is_ppcie_multi_gpu_protected_enabled {
+        //     println!("Skipping GPU topology check, multi-GPU protected PCIe is not enabled");
+        //     return;
+        // }
+        let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        for i in 0..gpu_count {
+            let gpu_attestation_report = nvml
+                .device_by_index(i)
+                .unwrap()
+                .confidential_compute_gpu_attestation_report(nonce)
+                .expect("Failed to get confidential compute GPU attestation report")
+                .attestation_report;
+            println!(
+                "GPU attestation report with length: {:?}",
+                gpu_attestation_report.len()
+            );
+            gpu_attestation_reports.push(gpu_attestation_report);
+        }
+        let result = gpu_topology_check(
+            &gpu_attestation_reports
+                .iter()
+                .map(|r| r.as_slice())
+                .collect::<Vec<_>>(),
+        )
+        .expect("Failed to check GPU topology");
+        assert_eq!(result.len(), 4);
+    }
+}
