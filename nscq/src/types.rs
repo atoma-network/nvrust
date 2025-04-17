@@ -77,6 +77,7 @@ impl NscqLabel {
     }
 }
 
+#[allow(clippy::from_over_into)]
 impl Into<String> for NscqLabel {
     fn into(self) -> String {
         let label = unsafe { std::ffi::CStr::from_ptr(self.data.as_ptr()) };
