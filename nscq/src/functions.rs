@@ -1,10 +1,11 @@
-use std::ffi::{c_uint, c_void};
+use std::ffi::c_void;
 
 use super::types::{
     NscqCallback, NscqLabel, NscqObserver, NscqRc, NscqSession, NscqUuid, UserData,
 };
 
-fn error_to_str(rc: NscqRc) -> &'static str {
+/// Error codes for NSCQ operations.
+pub fn nscq_error_to_str(rc: NscqRc) -> &'static str {
     match rc {
         0 => "NSCQ_RC_SUCCESS",
         1 => "NSCQ_RC_WARNING_RDT_INIT_FAILURE",
@@ -22,56 +23,111 @@ fn error_to_str(rc: NscqRc) -> &'static str {
     }
 }
 
-fn nsqc_handle_rc(rc: NscqRc) {
-    if rc < 0 {
-        panic!("NSCQ error: {}", error_to_str(rc));
-    }
-    if rc > 0 {
-        println!("NSCQ warning: {}", error_to_str(rc));
-    }
-}
-
-pub fn nscq_session_create(flags: c_uint) -> NscqSession {
+/// Creates a new session with flags.
+///
+/// # Arguments
+///
+/// * `flags` - Flags for the session creation.
+///
+/// # Returns
+///
+/// * `Ok(NscqSession)` if successful, or an error code if it fails.
+pub fn nscq_session_create(flags: u32) -> Result<NscqSession, NscqRc> {
     let session_result = unsafe { super::bindings::nscq_session_create(flags) };
-    nsqc_handle_rc(session_result.rc);
-    session_result.session
+    if session_result.rc != 0 {
+        return Err(session_result.rc);
+    }
+    Ok(session_result.session)
 }
 
+/// Destroys the session.
+///
+/// # Arguments
+///
+/// * `session` - The session to destroy
 pub fn nscq_session_destroy(session: NscqSession) {
     unsafe { super::bindings::nscq_session_destroy(session) }
 }
 
-pub fn nscq_session_mount(session: NscqSession, uuid: NscqUuid, flags: c_uint) -> NscqRc {
+/// Mounts a UUID to the session.
+///
+/// # Arguments
+///
+/// * `session` - The session to mount the UUID to.
+/// * `uuid` - The UUID to mount.
+/// * `flags` - Flags for the mount operation.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
+pub fn nscq_session_mount(session: NscqSession, uuid: NscqUuid, flags: u32) -> Result<(), NscqRc> {
     let result = unsafe { super::bindings::nscq_session_mount(session, uuid, flags) };
-    nsqc_handle_rc(result);
-    result
-}
-
-pub fn nscq_session_unmount(session: NscqSession, uuid: NscqUuid) -> NscqRc {
-    let result = unsafe { super::bindings::nscq_session_unmount(session, uuid) };
-    nsqc_handle_rc(result);
-    result
-}
-
-pub fn nscq_uuid_to_label(uuid: NscqUuid, flags: c_uint) -> NscqLabel {
-    let label = NscqLabel::new();
-    unsafe {
-        let res = super::bindings::nscq_uuid_to_label(uuid, &label, flags);
-        if res != 0 {
-            panic!("Failed to get label for UUID: {}", res);
-        }
+    if result != 0 {
+        return Err(result);
     }
-    label
+    Ok(())
 }
 
+/// Unmounts a UUID from the session.
+///
+/// # Arguments
+///
+/// * `session` - The session to unmount the UUID from.
+/// * `uuid` - The UUID to unmount.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
+pub fn nscq_session_unmount(session: NscqSession, uuid: NscqUuid) -> Result<(), NscqRc> {
+    let result = unsafe { super::bindings::nscq_session_unmount(session, uuid) };
+    if result != 0 {
+        Err(result)
+    } else {
+        Ok(())
+    }
+}
+
+/// Converts a UUID to a label.
+///
+/// # Arguments
+///
+/// * `uuid` - The UUID to convert.
+/// * `flags` - Flags for the conversion operation.
+///
+/// # Returns
+///
+/// * `Ok(NscqLabel)` if successful, or an error code if it fails.
+pub fn nscq_uuid_to_label(uuid: NscqUuid, flags: u32) -> Result<NscqLabel, NscqRc> {
+    let label = NscqLabel::new();
+    let res = unsafe { super::bindings::nscq_uuid_to_label(uuid, &label, flags) };
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(label)
+    }
+}
+
+/// Observes a path in the session.
+///
+/// # Arguments
+///
+/// * `session` - The session to observe.
+/// * `path` - The path to observe.
+/// * `callback` - The callback function to call.
+/// * `user_data` - User data to pass to the callback.
+/// * `flags` - Flags for the observation.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_path_observe(
     session: NscqSession,
     path: &str,
     callback: NscqCallback,
     user_data: UserData,
-    flags: c_uint,
-) -> NscqRc {
-    let c_path = std::ffi::CString::new(path).unwrap();
+    flags: u32,
+) -> Result<(), NscqRc> {
+    let c_path = std::ffi::CString::new(path).map_err(|_| -5)?;
     let res = unsafe {
         super::bindings::nscq_session_path_observe(
             session,
@@ -81,18 +137,34 @@ pub fn nscq_session_path_observe(
             flags,
         )
     };
-    nsqc_handle_rc(res);
-    res
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(())
+    }
 }
 
+/// Registers an observer for a path in the session.
+///
+/// # Arguments
+///
+/// * `session` - The session to register the observer for.
+/// * `path` - The path to register the observer for.
+/// * `callback` - The callback function to call.
+/// * `user_data` - User data to pass to the callback.
+/// * `flags` - Flags for the registration.
+///
+/// # Returns
+///
+/// * `Ok(NscqObserver)` if successful, or an error code if it fails.
 pub fn nscq_session_path_register_observer(
     session: NscqSession,
     path: &str,
     callback: NscqCallback,
     user_data: UserData,
-    flags: c_uint,
-) -> NscqObserver {
-    let c_path = std::ffi::CString::new(path).unwrap();
+    flags: u32,
+) -> Result<NscqObserver, NscqRc> {
+    let c_path = std::ffi::CString::new(path).map_err(|_| -5)?;
     let res = unsafe {
         super::bindings::nscq_session_path_register_observer(
             session,
@@ -102,34 +174,85 @@ pub fn nscq_session_path_register_observer(
             flags,
         )
     };
-    nsqc_handle_rc(res.rc);
-    res.observer
+    if res.rc != 0 {
+        Err(res.rc)
+    } else {
+        Ok(res.observer)
+    }
 }
 
+/// Deregisters an observer.
+///
+/// # Arguments
+///
+/// * `observer` - The observer to deregister.
+#[allow(dead_code)]
 pub fn nscq_observer_deregister(observer: NscqObserver) {
     unsafe { super::bindings::nscq_observer_deregister(observer) }
 }
 
-pub fn nscq_observer_observe(observer: NscqObserver, flags: c_uint) -> NscqRc {
+/// Observes a session.
+///
+/// # Arguments
+///
+/// * `observer` - The observer to observe.
+/// * `flags` - Flags for the observation.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
+#[allow(dead_code)]
+pub fn nscq_observer_observe(observer: NscqObserver, flags: u32) -> Result<(), NscqRc> {
     let res = unsafe { super::bindings::nscq_observer_observe(observer, flags) };
-    nsqc_handle_rc(res);
-    res
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(())
+    }
 }
 
-pub fn nscq_session_observe(session: NscqSession, flags: c_uint) -> NscqRc {
+/// Observes a session.
+///
+/// # Arguments
+///
+/// * `session` - The session to observe.
+/// * `flags` - Flags for the observation.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
+pub fn nscq_session_observe(session: NscqSession, flags: u32) -> Result<(), NscqRc> {
     let res = unsafe { super::bindings::nscq_session_observe(session, flags) };
-    nsqc_handle_rc(res);
-    res
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(())
+    }
 }
 
+/// Sets the input for a session.
+///
+/// # Arguments
+///
+/// * `session` - The session to set the input for.
+/// * `input_arg` - The input argument.
+/// * `input_size` - The size of the input argument.
+/// * `flags` - Flags for the input operation.
+///
+/// # Returns
+///
+/// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_set_input(
     session: NscqSession,
     input_arg: &mut c_void,
-    input_size: c_uint,
-    flags: c_uint,
-) -> NscqRc {
+    input_size: u32,
+    flags: u32,
+) -> Result<(), NscqRc> {
     let res =
         unsafe { super::bindings::nscq_session_set_input(session, flags, input_arg, input_size) };
-    nsqc_handle_rc(res);
-    res
+    if res != 0 {
+        Err(res)
+    } else {
+        Ok(())
+    }
 }

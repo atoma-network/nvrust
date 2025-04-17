@@ -6,6 +6,20 @@ use lazy_static::lazy_static;
 use libloading::{Library, Symbol};
 use std::ffi::c_void;
 
+/// Function to find a library in the system's library path.
+///
+/// This function searches for the specified library name in the `LD_LIBRARY_PATH` environment variable.
+/// It constructs the full path to the library by appending `lib` and `.so` to the name.
+/// If the library is found, it returns the full path as a `String`.
+/// If the library is not found, it returns `None`.
+///
+/// # Arguments
+///
+/// * `name` - The name of the library to search for (without `lib` prefix and `.so` suffix).
+///
+/// # Returns
+///
+/// * `Option<String>` - The full path to the library if found, otherwise `None`.
 fn find_library(name: &str) -> Option<String> {
     let paths = std::env::var("LD_LIBRARY_PATH").unwrap_or_default();
     for path in paths.split(':') {
