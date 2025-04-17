@@ -142,6 +142,7 @@ fn extract_switch_pdis(
                 });
             }
             pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE;
+            println!("final pos = {}", pos);
             return Ok((
                 opaque_data[pos..pos + data_size].try_into().unwrap(),
                 pos + data_size,
