@@ -13,13 +13,13 @@ use super::{
     },
 };
 
-/// Bit position for the TNVL status
+/// Bit position for the Trusted NVLink Mode (TNVL) status
 const TNVL_BIT_POSITION: usize = 0;
 /// Bit position for the lock status
 const LOCK_BIT_POSITION: usize = 1;
 /// Path for UUID, this is complete path
 const UUID_PATH: &str = "/drv/nvswitch/{device}/uuid";
-/// Path for TNVL status, this is partial path
+/// Path for Trusted NVLink Mode (TNVL) status, this is partial path
 const TNVL_STATUS_PATH: &str = "/config/pcie_mode";
 /// Path for attestation report, this is partial path
 const ATTESTATION_REPORT_PATH: &str = "/config/attestation_report";
@@ -32,7 +32,7 @@ const ARCH: &str = "/id/arch";
 
 /// Handler for NSCQ (NVIDIA Switch Control Query) operations.
 /// This struct provides methods to interact with the NSCQ service, including
-/// observing paths, retrieving UUIDs, architecture information, TNVL status,
+/// observing paths, retrieving UUIDs, architecture information, Trusted NVLink Mode (TNVL) status,
 /// attestation certificates, and attestation reports.
 pub struct NscqHandler {
     session: Session,
@@ -89,7 +89,7 @@ impl NscqHandler {
         architecture.into_iter().collect()
     }
 
-    /// Get the tnvl status of a specific switch.
+    /// Get the Trusted NVLink Mode (TNVL) status of a specific switch.
     ///
     /// # Arguments
     ///
@@ -97,8 +97,8 @@ impl NscqHandler {
     ///
     /// # Returns
     ///
-    /// * `Ok(NscqTnvlStatus)` containing the TNVL status of the switch if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the TNVL status.
+    /// * `Ok(NscqTnvlStatus)` containing the Trusted NVLink Mode (TNVL) status of the switch if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
     pub fn get_switch_tnvl_status(&self, device: &str) -> Result<NscqTnvlStatus, NscqRc> {
         let user_data_ptr: *mut Vec<Result<(String, NscqTnvlStatus), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
@@ -115,12 +115,12 @@ impl NscqHandler {
         Ok(tnvl_status[device])
     }
 
-    /// Get the tnvl status of all switches.
+    /// Get the Trusted NVLink Mode (TNVL) status of all switches.
     ///
     /// # Returns
     ///
-    /// * `Ok(HashMap<String, NscqTnvlStatus>)` containing the TNVL status of all switches if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the TNVL status.
+    /// * `Ok(HashMap<String, NscqTnvlStatus>)` containing the Trusted NVLink Mode (TNVL) status of all switches if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
     pub fn get_all_switch_tnvl_status(&self) -> Result<HashMap<String, NscqTnvlStatus>, NscqRc> {
         let user_data_ptr: *mut Vec<Result<(String, NscqTnvlStatus), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
@@ -135,7 +135,7 @@ impl NscqHandler {
         tnvl_status.into_iter().collect()
     }
 
-    /// Check if the switch is in TNVL mode.
+    /// Check if the switch is in Trusted NVLink Mode (TNVL) mode.
     ///
     /// # Arguments
     ///
@@ -143,8 +143,8 @@ impl NscqHandler {
     ///
     /// # Returns
     ///
-    /// * `Ok(bool)` indicating whether the switch is in TNVL mode if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the TNVL status.
+    /// * `Ok(bool)` indicating whether the switch is in Trusted NVLink Mode (TNVL) mode if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
     pub fn is_switch_tnvl_mode(&self, device: &str) -> Result<bool, NscqRc> {
         let tnvl_status = self.get_switch_tnvl_status(device)?;
         Ok(((tnvl_status >> TNVL_BIT_POSITION) & 1) == 1)
@@ -159,7 +159,7 @@ impl NscqHandler {
     /// # Returns
     ///
     /// * `Ok(bool)` indicating whether the switch is in lock mode if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the TNVL status.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
     pub fn is_switch_lock_mode(&self, device: &str) -> Result<bool, NscqRc> {
         let tnvl_status = self.get_switch_tnvl_status(device)?;
         Ok(((tnvl_status >> LOCK_BIT_POSITION) & 1) == 1)
@@ -328,7 +328,7 @@ unsafe extern "C" fn architecture_callback(
     }
 }
 
-/// Callback function for TNVL status observation.
+/// Callback function for Trusted NVLink Mode (TNVL) status observation.
 unsafe extern "C" fn tnvl_status_callback(
     device: NscqUuid,
     rc: NscqRc,

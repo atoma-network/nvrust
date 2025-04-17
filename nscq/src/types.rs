@@ -10,7 +10,7 @@ pub type NscqRc = i8;
 /// Session ID for the NSCQ API
 pub type NscqSession = *mut c_void;
 
-/// Tnvl status for the NSCQ API
+/// Trusted NVLink Mode (TNVL) status for the NSCQ API
 pub type NscqTnvlStatus = i8;
 
 /// Architecture for the NSCQ API
@@ -93,7 +93,7 @@ pub type UuidCallback =
 pub type ArchitectureCallback =
     unsafe extern "C" fn(device: NscqUuid, rc: NscqRc, arch: NscqArch, user_data: UserData);
 
-/// TNVL callback function type
+/// Trusted NVLink Mode (TNVL) callback function type
 pub type TnvlCallback =
     unsafe extern "C" fn(device: NscqUuid, rc: NscqRc, tnvl: NscqTnvlStatus, user_data: UserData);
 
