@@ -5,5 +5,5 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-lazy_static = "1.5.0"
-libloading = "0.8.6"
+lazy_static.workspace = true
+libloading.workspace = true

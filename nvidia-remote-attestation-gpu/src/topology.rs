@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use crate::device_pdis::{extract_device_pdis_in_gpu_attestation_report_data, SwitchDevicePdis};
 use crate::error::{NvidiaRemoteAttestationError, Result};
-use crate::swtich_pdis::extract_switch_pdis_in_gpu_attestation_report_data;
-use crate::swtich_pdis::opaque_data_field_size::PDI_DATA_FIELD_SIZE;
+use crate::switch_pdis::extract_switch_pdis_in_gpu_attestation_report_data;
+use crate::switch_pdis::opaque_data_field_size::PDI_DATA_FIELD_SIZE;
 
 /// The number of GPU attestation reports to check for topology.
 const NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS: usize = 8;
