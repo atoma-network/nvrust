@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use thiserror::Error;
 
-use crate::swtich_pdis::opaque_data_field_size::PDI_DATA_FIELD_SIZE;
+use crate::switch_pdis::opaque_data_field_size::PDI_DATA_FIELD_SIZE;
 
 pub type Result<T> = std::result::Result<T, NvidiaRemoteAttestationError>;
 
