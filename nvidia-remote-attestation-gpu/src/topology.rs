@@ -300,7 +300,7 @@ mod tests {
 
         // NVSwitch Topology Check
         let start_time = std::time::Instant::now();
-        let nscq = nscq::nscq_handler::NscqHandler::new();
+        let nscq = nscq::nscq_handler::NscqHandler::new().expect("Failed to initialize NSCQ");
         let nonce = rand::thread_rng().gen::<[u8; 32]>();
         let num_gpus = gpu_count as usize;
         let switch_attestation_reports = nscq
@@ -308,8 +308,8 @@ mod tests {
             .expect("Failed to get all switch attestation reports");
         let result = switch_topology_check(
             &switch_attestation_reports
-                .iter()
-                .map(|(_, report)| report.as_slice())
+                .values()
+                .map(|report| report.as_slice())
                 .collect::<Vec<_>>(),
             num_gpus,
             unique_switch_pdis_set,
