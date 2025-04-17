@@ -840,8 +840,10 @@ dependencies = [
 name = "nvidia-remote-attestation-gpu"
 version = "0.1.0"
 dependencies = [
+ "nscq",
  "nvml-wrapper",
  "once_cell",
+ "rand",
  "thiserror 2.0.12",
  "tracing",
 ]
