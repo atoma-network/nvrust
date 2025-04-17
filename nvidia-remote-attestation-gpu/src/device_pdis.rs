@@ -111,6 +111,7 @@ fn extract_switch_device_pdis_in_opaque_data(
 fn extract_switch_pdis(
     opaque_data: &[u8],
 ) -> Result<([u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE], usize)> {
+    println!("opaque_data length: {}", opaque_data.len());
     let mut pos = 0;
     while pos < opaque_data.len() {
         if pos
@@ -126,6 +127,8 @@ fn extract_switch_pdis(
         let data_type = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]);
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE;
         let data_size = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]) as usize;
+        println!("pos = {}", pos);
+        println!("data size = {}", data_size);
         if data_type == opaque_data_types::OPAQUE_FIELD_ID_DEVICE_PDI {
             if data_size != opaque_data_field_size::PDI_DATA_FIELD_SIZE {
                 return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength {
@@ -144,6 +147,7 @@ fn extract_switch_pdis(
             ));
         }
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE + data_size;
+        println!("pos = {}", pos);
     }
     Err(NvidiaRemoteAttestationError::SwitchPdisNotFound)
 }
