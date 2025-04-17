@@ -161,6 +161,7 @@ pub fn switch_topology_check(
             }
         };
         println!("switch_pdis: {:?}", switch_pdis);
+        println!("unique_switch_pdis_set: {:?}", unique_switch_pdis_set);
         if !unique_switch_pdis_set.contains(&switch_pdis) {
             tracing::error!(
                 "Switch Topology check: The switch PDI reported in switch attestation report which is {:?} is not in the set of unique switch PDIS: {:?}",
