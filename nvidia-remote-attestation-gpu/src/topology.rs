@@ -59,7 +59,6 @@ const DISABLED_PDI: &[u8] = &[0u8; PDI_DATA_FIELD_SIZE];
 pub fn gpu_topology_check(
     gpu_attestation_reports: &[&[u8]],
 ) -> Result<HashSet<[u8; PDI_DATA_FIELD_SIZE]>> {
-    println!("gpu_attestation_reports length: {:?}", gpu_attestation_reports.len());
     if gpu_attestation_reports.len() != NUMBER_OF_GPU_TOPOLOGY_CHECK_REPORTS {
         tracing::error!(
             "Invalid number of GPU attestation reports: expected {}, got {}",
@@ -76,7 +75,6 @@ pub fn gpu_topology_check(
     }
     let mut unique_switch_pdis_set: Option<HashSet<[u8; PDI_DATA_FIELD_SIZE]>> = None;
     for evidence in gpu_attestation_reports {
-        println!("evidence length: {:?}", evidence.len());
         let switch_pdis_in_evidence =
             match extract_switch_pdis_in_gpu_attestation_report_data(evidence) {
                 Ok(switch_pdis) => switch_pdis,
@@ -88,12 +86,9 @@ pub fn gpu_topology_check(
                     return Err(e);
                 }
             };
-        println!("switch_pdis_in_evidence length: {:?}", switch_pdis_in_evidence.len());
         let mut switch_pdis_set =
             HashSet::<[u8; PDI_DATA_FIELD_SIZE]>::from_iter(switch_pdis_in_evidence);
-        println!("switch_pdis_set length: {:?}", switch_pdis_set.len());
         switch_pdis_set.remove(DISABLED_PDI);
-        println!("switch_pdis_set length after removing DISABLED_PDI: {:?}", switch_pdis_set.len());
         if switch_pdis_set.len() != NUMBER_OF_SWITCH_PDIS {
             tracing::error!(
                 "Invalid number of switch PDIS: expected {}, got {}",
@@ -105,10 +100,8 @@ pub fn gpu_topology_check(
                 length: switch_pdis_set.len(),
             });
         }
-        println!("switch_pdis_set: {:?}", switch_pdis_set);
         match unique_switch_pdis_set {
             Some(ref set) => {
-                println!("set: {:?}", set);
                 if set != &switch_pdis_set {
                     tracing::error!(
                         "Invalid switch PDIS topology, we found a mismatch between the expected and actual switch PDIS topology: expected {:?}, got {:?}",
