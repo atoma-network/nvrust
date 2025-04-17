@@ -130,6 +130,7 @@ fn extract_switch_pdis(
         println!("pos = {}", pos);
         println!("data size = {}", data_size);
         if data_type == opaque_data_types::OPAQUE_FIELD_ID_DEVICE_PDI {
+            println!("data type = {}", data_type);
             if data_size != opaque_data_field_size::PDI_DATA_FIELD_SIZE {
                 return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength {
                     message: format!(
