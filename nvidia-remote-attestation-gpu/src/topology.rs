@@ -266,6 +266,7 @@ mod tests {
     #[test]
     fn test_switch_topology_check() {
         // GPU Topology Check, we need to do it first to get the unique switch PDIS set
+        let start_time = std::time::Instant::now();
         let nvml = Nvml::init().expect("Failed to initialize NVML");
         let gpu_count = nvml.device_count().expect("Failed to get device count");
         let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
@@ -291,7 +292,10 @@ mod tests {
         )
         .expect("Failed to check GPU topology");
 
+        println!("GPU Topology check took: {:?}", start_time.elapsed());
+
         // NVSwitch Topology Check
+        let start_time = std::time::Instant::now();
         let nscq = nscq::nscq_handler::NscqHandler::new();
         let nonce = rand::thread_rng().gen::<[u8; 32]>();
         let num_gpus = gpu_count as usize;
@@ -306,6 +310,7 @@ mod tests {
             num_gpus,
             unique_switch_pdis_set,
         );
-        assert!(result.is_ok());
+        result.expect("Failed to check switch topology");
+        println!("Switch Topology check took: {:?}", start_time.elapsed());
     }
 }
