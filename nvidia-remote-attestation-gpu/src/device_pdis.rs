@@ -152,41 +152,29 @@ fn check_spdm_measurement_length(
     Ok(())
 }
 
-pub mod spdm_response_field_size {
-    /// The size of the SPDM version field.
-    pub const SPDM_VERSION: usize = 1;
-    /// The size of the request response code field.    
-    pub const REQUEST_RESPONSE_CODE: usize = 1;
-    /// The size of the parameter 1 field.
-    pub const PARAM1: usize = 1;
-    /// The size of the parameter 2 field.
-    pub const PARAM2: usize = 1;
-    /// The size of the number of blocks field.
-    pub const NUMBER_OF_BLOCKS: usize = 1;
-    /// The size of the measurement record length field.
-    pub const MEASUREMENT_RECORD_LENGTH: usize = 3;
-    /// The size of the nonce field.
-    pub const NONCE: usize = 32;
-    /// The size of the opaque data field.
-    pub const OPAQUE_DATA: usize = 2;
-}
-
-pub mod opaque_data_field_size {
-    /// The size of the opaque data field type field.
-    pub const OPAQUE_DATA_FIELD_TYPE: usize = 2;
-    /// The size of the opaque data field size field.
-    pub const OPAQUE_DATA_FIELD_SIZE: usize = 2;
-    /// The size of the PDI data field.
-    pub const PDI_DATA_FIELD_SIZE: usize = 8;
-}
-
-pub mod opaque_data_types {
-    /// The type of the opaque data field for Device PDI.
-    pub const OPAQUE_FIELD_ID_DEVICE_PDI: u16 = 22;
-    /// The type of the opaque data field for Switch GPU PDIS.
-    pub const OPAQUE_FIELD_ID_SWITCH_GPU_PDIS: u16 = 26;
-}
-
+/// Parses the opaque data section of an SPDM measurement response to extract
+/// the Switch GPU PDIS and the Switch PDI.
+///
+/// The opaque data is expected to contain TLV (Type-Length-Value) encoded entries.
+/// This function searches for the first occurrence of entries with type
+/// `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS` and `OPAQUE_FIELD_ID_DEVICE_PDI`.
+///
+/// # Arguments
+///
+/// * `opaque_data` - A byte slice representing the opaque data section.
+///
+/// # Returns
+///
+/// * `Ok((gpu_pdis_bytes, switch_pdis))` - A tuple containing the raw bytes
+///   of the Switch GPU PDIS (`Vec<u8>`) and the Switch PDI
+///   (`[u8; PDI_DATA_FIELD_SIZE]`) if both are found successfully.
+/// * `Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength)` - If the opaque
+///   data is malformed (e.g., too short for headers or declared data size), or if
+///   the size of the found Device PDI data does not match `PDI_DATA_FIELD_SIZE`.
+/// * `Err(NvidiaRemoteAttestationError::SwitchGpuPdisNotFound)` - If the Switch GPU
+///   PDIS entry (`OPAQUE_FIELD_ID_SWITCH_GPU_PDIS`) is not found.
+/// * `Err(NvidiaRemoteAttestationError::SwitchPdisNotFound)` - If the Switch PDI
+///   entry (`OPAQUE_FIELD_ID_DEVICE_PDI`) is not found.
 fn parse_opaque_data_for_pdis(
     opaque_data: &[u8],
 ) -> Result<(Vec<u8>, [u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE])> {
@@ -258,4 +246,39 @@ fn parse_opaque_data_for_pdis(
         (None, _) => Err(NvidiaRemoteAttestationError::SwitchGpuPdisNotFound),
         (_, None) => Err(NvidiaRemoteAttestationError::SwitchPdisNotFound),
     }
+}
+
+pub mod spdm_response_field_size {
+    /// The size of the SPDM version field.
+    pub const SPDM_VERSION: usize = 1;
+    /// The size of the request response code field.    
+    pub const REQUEST_RESPONSE_CODE: usize = 1;
+    /// The size of the parameter 1 field.
+    pub const PARAM1: usize = 1;
+    /// The size of the parameter 2 field.
+    pub const PARAM2: usize = 1;
+    /// The size of the number of blocks field.
+    pub const NUMBER_OF_BLOCKS: usize = 1;
+    /// The size of the measurement record length field.
+    pub const MEASUREMENT_RECORD_LENGTH: usize = 3;
+    /// The size of the nonce field.
+    pub const NONCE: usize = 32;
+    /// The size of the opaque data field.
+    pub const OPAQUE_DATA: usize = 2;
+}
+
+pub mod opaque_data_field_size {
+    /// The size of the opaque data field type field.
+    pub const OPAQUE_DATA_FIELD_TYPE: usize = 2;
+    /// The size of the opaque data field size field.
+    pub const OPAQUE_DATA_FIELD_SIZE: usize = 2;
+    /// The size of the PDI data field.
+    pub const PDI_DATA_FIELD_SIZE: usize = 8;
+}
+
+pub mod opaque_data_types {
+    /// The type of the opaque data field for Device PDI.
+    pub const OPAQUE_FIELD_ID_DEVICE_PDI: u16 = 22;
+    /// The type of the opaque data field for Switch GPU PDIS.
+    pub const OPAQUE_FIELD_ID_SWITCH_GPU_PDIS: u16 = 26;
 }
