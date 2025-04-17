@@ -125,6 +125,7 @@ fn extract_switch_pdis(
 /// * `NvidiaRemoteAttestationError::NvSwitchPdisNotFound`: If the loop completes without
 ///   finding a TLV entry with the type `OPAQUE_FIELD_ID_SWITCH_GPU_PDIS`.
 fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>> {
+    println!("opaque data: {:?}", opaque_data);
     let mut current_position = 0;
     while current_position < opaque_data.len() {
         let data_type = opaque_data
