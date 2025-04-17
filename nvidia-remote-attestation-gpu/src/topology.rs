@@ -160,8 +160,9 @@ pub fn switch_topology_check(
                 return Err(e);
             }
         };
-        println!("switch_pdis: {:?}", switch_pdis);
-        println!("unique_switch_pdis_set: {:?}", unique_switch_pdis_set);
+        // NOTE: We need to revert the order of the switch PDI, to be consistent with the byte order of the switch device PDI
+        // from the GPU attestation report. This is consistent with the original `nvtrust` implementation
+        // (see https://github.com/NVIDIA/nvtrust/blob/main/guest_tools/ppcie-verifier/ppcie/verifier/src/topology/validate_topology.py#L62)
         if !unique_switch_pdis_set.contains(&switch_pdis) {
             tracing::error!(
                 "Switch Topology check: The switch PDI reported in switch attestation report which is {:?} is not in the set of unique switch PDIS: {:?}",
