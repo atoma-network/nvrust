@@ -107,6 +107,7 @@ fn extract_switch_device_pdis_in_opaque_data(
 ///
 /// * `Ok((switch_pdis, pos))` - If the Switch PDIS is found.
 /// * `Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength)` - If the Switch PDIS is not found.
+/// * `Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength)` - If the Switch PDIS data size is invalid.
 fn extract_switch_pdis(
     opaque_data: &[u8],
 ) -> Result<([u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE], usize)> {
@@ -126,10 +127,10 @@ fn extract_switch_pdis(
                     length: data_size,
                 });
             }
-            pos += data_size;
+            pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE;
             return Ok((opaque_data[pos..pos + data_size].try_into().unwrap(), pos));
         }
-        pos += data_size;
+        pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE + data_size;
     }
     Err(NvidiaRemoteAttestationError::SwitchPdisNotFound)
 }
@@ -152,10 +153,11 @@ fn extract_switch_gpu_pdis(opaque_data: &[u8], mut pos: usize) -> Result<Vec<u8>
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE;
         let data_size = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]) as usize;
         if data_type == opaque_data_types::OPAQUE_FIELD_ID_SWITCH_GPU_PDIS {
+            pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE;
             switch_gpu_pdis.extend(&opaque_data[pos..pos + data_size as usize]);
             return Ok(switch_gpu_pdis);
         }
-        pos += data_size;
+        pos += opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE + data_size;
     }
     Err(NvidiaRemoteAttestationError::SwitchGpuPdisNotFound)
 }
