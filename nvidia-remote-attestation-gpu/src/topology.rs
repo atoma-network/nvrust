@@ -262,4 +262,50 @@ mod tests {
         .expect("Failed to check GPU topology");
         assert_eq!(result.len(), 4);
     }
+
+    #[test]
+    fn test_switch_topology_check() {
+        // GPU Topology Check, we need to do it first to get the unique switch PDIS set
+        let nvml = Nvml::init().expect("Failed to initialize NVML");
+        let gpu_count = nvml.device_count().expect("Failed to get device count");
+        let mut gpu_attestation_reports = Vec::with_capacity(gpu_count as usize);
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        for i in 0..gpu_count {
+            let gpu_attestation_report = nvml
+                .device_by_index(i)
+                .unwrap()
+                .confidential_compute_gpu_attestation_report(nonce)
+                .expect("Failed to get confidential compute GPU attestation report")
+                .attestation_report;
+            println!(
+                "GPU attestation report with length: {:?}",
+                gpu_attestation_report.len()
+            );
+            gpu_attestation_reports.push(gpu_attestation_report);
+        }
+        let unique_switch_pdis_set = gpu_topology_check(
+            &gpu_attestation_reports
+                .iter()
+                .map(|r| r.as_slice())
+                .collect::<Vec<_>>(),
+        )
+        .expect("Failed to check GPU topology");
+
+        // NVSwitch Topology Check
+        let nscq = nscq::nscq_handler::NscqHandler::new();
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
+        let num_gpus = gpu_count as usize;
+        let switch_attestation_reports = nscq
+            .get_all_switch_attestation_report(&nonce)
+            .expect("Failed to get all switch attestation reports");
+        let result = switch_topology_check(
+            &switch_attestation_reports
+                .iter()
+                .map(|(_, report)| report.as_slice())
+                .collect::<Vec<_>>(),
+            num_gpus,
+            unique_switch_pdis_set,
+        );
+        assert!(result.is_ok());
+    }
 }
