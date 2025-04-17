@@ -168,6 +168,16 @@ fn extract_switch_pdis(
 fn extract_switch_gpu_pdis(opaque_data: &[u8], mut pos: usize) -> Result<Vec<u8>> {
     let mut switch_gpu_pdis = Vec::new();
     while pos < opaque_data.len() {
+        if pos
+            + opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE
+            + opaque_data_field_size::OPAQUE_DATA_FIELD_SIZE
+            > opaque_data.len()
+        {
+            return Err(NvidiaRemoteAttestationError::InvalidSwitchGpuPdisLength {
+                message: "Switch GPU PDIS is too short to contain a PDI".to_string(),
+                length: opaque_data.len(),
+            });
+        }
         let data_type = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]);
         pos += opaque_data_field_size::OPAQUE_DATA_FIELD_TYPE;
         let data_size = u16::from_le_bytes([opaque_data[pos], opaque_data[pos + 1]]) as usize;
