@@ -33,6 +33,16 @@ pub const HOPPER_ARCH: &str = "HOPPER";
 /// attestation service.
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Default claims version for remote attestation requests.
+///
+/// This version is used as the default claims version in the remote attestation request.
+pub const DEFAULT_CLAIMS_VERSION: &str = "2.0";
+
+/// Claims version key for remote attestation requests.
+///
+/// This key is used to identify the claims version in the remote attestation request.
+pub const CLAIMS_VERSION_KEY: &str = "claims_version";
+
 /// Nonce key for remote attestation requests.
 ///
 /// This key is used to identify the nonce in the remote attestation request.

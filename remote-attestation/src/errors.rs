@@ -24,4 +24,6 @@ pub enum AttestError {
     CertificateParseError(
         #[from] x509_parser::asn1_rs::Err<x509_parser::prelude::error::X509Error>,
     ),
+    #[error("Failed to parse service key")]
+    ServiceKeyParseError(#[from] reqwest::header::InvalidHeaderValue),
 }
