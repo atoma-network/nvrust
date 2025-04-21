@@ -15,7 +15,28 @@ use crate::{
     utils::get_allow_hold_cert,
 };
 
-
+/// Collects attestation evidence for all NVSwitches managed by the NSCQ handler.
+///
+/// This function iterates through all NVSwitch UUIDs obtained from the `NscqHandler`,
+/// retrieves the attestation report and certificate chain for each switch using the provided nonce,
+/// base64 encodes the evidence and certificate, and compiles them into a vector of `NvSwitchEvidence`.
+///
+/// # Arguments
+///
+/// * `nscq` - A reference to the `NscqHandler` instance used to communicate with the NVSwitches.
+/// * `nonce` - A 32-byte array used as a nonce for generating the attestation report.
+///
+/// # Returns
+///
+/// A `Result` containing a `Vec<NvSwitchEvidence>` on success. Each `NvSwitchEvidence` struct
+/// holds the UUID, base64-encoded attestation report, and base64-encoded certificate chain
+/// for a single NVSwitch.
+///
+/// # Errors
+///
+/// Returns an `NscqError` if there is an issue communicating with the NSCQ handler or
+/// retrieving the necessary information (UUIDs, attestation report, or certificate chain)
+/// from any of the NVSwitches.
 #[instrument(name = "collect_nvswitch_evidence", skip_all)]
 pub fn collect_nvswitch_evidence(
     nscq: &NscqHandler,
@@ -31,7 +52,6 @@ pub fn collect_nvswitch_evidence(
             .get_switch_attestation_certificate_chain(uuid)
             .map_err(NscqError::from)?;
         evidence_vec.push(NvSwitchEvidence {
-            uuid: uuid.to_string(),
             evidence: STANDARD.encode(evidence),
             certificate: STANDARD.encode(certificate),
         });
