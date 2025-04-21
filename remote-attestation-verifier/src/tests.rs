@@ -68,7 +68,11 @@ async fn test_attest_working_evidence() {
 #[tokio::test]
 async fn test_attest_new_gpu_evidence() {
     let (evidence, nonce) = generate_new_gpu_evidence();
-    match verify_gpu_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
+    let attest_options = AttestRemoteOptions {
+        claims_version: Some("3.0".to_string()),
+        ..Default::default()
+    };
+    match verify_gpu_attestation(&evidence, &nonce, attest_options).await {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);
