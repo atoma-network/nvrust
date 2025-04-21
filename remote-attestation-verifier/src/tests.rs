@@ -4,7 +4,7 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use nvml_wrapper::Nvml;
 use rand::Rng;
 
-use crate::{attest_remote, DeviceEvidence};
+use crate::{verify_gpu_attestation, DeviceEvidence};
 
 fn read_working_evidence() -> (Vec<DeviceEvidence>, String) {
     let file = Path::new("./evidence/evidence.json");
@@ -44,7 +44,7 @@ fn generate_new_evidence() -> (Vec<DeviceEvidence>, String) {
 #[tokio::test]
 async fn test_attest_working_evidence() {
     let (evidence, nonce) = read_working_evidence();
-    match attest_remote(&evidence, &nonce, None, None, None).await {
+    match verify_gpu_attestation(&evidence, &nonce, None, None, None).await {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);
@@ -59,7 +59,7 @@ async fn test_attest_working_evidence() {
 #[tokio::test]
 async fn test_attest_new_evidence() {
     let (evidence, nonce) = generate_new_evidence();
-    match attest_remote(&evidence, &nonce, None, None, None).await {
+    match verify_gpu_attestation(&evidence, &nonce, None, None, None).await {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);

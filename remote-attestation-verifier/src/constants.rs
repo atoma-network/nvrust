@@ -6,6 +6,9 @@ use std::time::Duration;
 pub const REMOTE_GPU_VERIFIER_SERVICE_URL: &str =
     "https://nras.attestation.nvidia.com/v3/attest/gpu";
 
+pub const REMOTE_NVSWITCH_VERIFIER_SERVICE_URL: &str =
+    "https://nras.attestation.nvidia.com/v3/attest/switch";
+
 /// Environment variable key for certificate hold status.
 /// This key is used to check if certificates should be allowed to be held.
 pub const NV_ALLOW_HOLD_CERT_KEY: &str = "NV_ALLOW_HOLD_CERT";
@@ -26,6 +29,11 @@ pub const NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER: &str = "X-NVIDIA-OCSP-ALLOW-CERT-H
 ///
 /// This architecture is used to identify the architecture in the remote attestation request.
 pub const HOPPER_ARCH: &str = "HOPPER";
+
+/// LS10 architecture for remote attestation requests.
+///
+/// This architecture is used to identify the architecture in the remote attestation request.
+pub const LS10_ARCH: &str = "LS10";
 
 /// Default timeout for remote attestation requests.
 ///

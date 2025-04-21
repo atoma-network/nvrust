@@ -6,22 +6,22 @@ use tracing::{debug, error, instrument, Instrument};
 
 use crate::{
     constants::{
-        ARCH_KEY, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY, HOPPER_ARCH, NONCE_KEY,
+        ARCH_KEY, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY, HOPPER_ARCH, LS10_ARCH, NONCE_KEY,
         NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
     },
     errors::{AttestError, Result},
-    types::DeviceEvidence,
+    types::NvSwitchEvidence,
     utils::get_allow_hold_cert,
 };
 
-/// Performs remote attestation of GPU devices by sending evidence to a verification service.
+/// Verifies the attestation of an NVSwitch device
 ///
-/// This function sends GPU evidence to a remote attestation service (NRAS) and processes
-/// the verification result. It's used to verify the authenticity and integrity of NVIDIA GPUs.
+/// This function sends the NVSwitch evidence to the remote attestation service
+/// and processes the verification result.
 ///
 /// # Arguments
 ///
-/// * `gpu_evidences` - A slice of `DeviceEvidence` containing attestation data from GPUs
+/// * `nvswitch_evidences` - A slice of `NvSwitchEvidence` containing attestation data from NVSwitch
 /// * `nonce` - A unique string value to prevent replay attacks
 /// * `verifier_url` - Optional URL of the verification service. If `None`, uses the default URL
 /// * `allow_hold_cert` - Optional flag to allow certificate hold status. If `None`, uses the system default
@@ -35,44 +35,20 @@ use crate::{
 ///
 /// # Errors
 ///
-/// Returns `AttestError` if:
-/// * The HTTP request fails
-/// * The server returns a non-success status code
-/// * The response cannot be parsed
-/// * JWT token validation fails
-///
-/// # Example
-///
-/// ```rust,ignore
-/// use remote_attestation::{attest_remote, DeviceEvidence};
-///
-/// async fn example() -> Result<(), Box<dyn std::error::Error>> {
-///     let evidence = vec![/* DeviceEvidence instances */];
-///     let nonce = "unique-nonce-value";
-///     
-///     let (attestation_passed, response) = attest_remote(&evidence, nonce, None, None, None).await?;
-///     
-///     if attestation_passed {
-///         println!("GPU attestation successful!");
-///     } else {
-///         println!("GPU attestation failed!");
-///     }
-///     
-///     Ok(())
-/// }
-/// ```
+/// * `AttestError::ParseResponseError` - If the response cannot be parsed as JSON
+/// * `AttestError::ResponseError` - If the response status code is not successful
+/// * `AttestError::NrasTokenError` - If the NRASToken cannot be decoded
 #[instrument(
-    level = "debug",
-    name = "attest_remote",
-    skip(gpu_evidences, nonce, verifier_url, allow_hold_cert),
+    name = "verify_nvswitch_attestation",
+    skip_all,
     fields(
-        nonce = %nonce,
-        verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL),
-        allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert()),
+        verifier_url = %verifier_url,
+        allow_hold_cert = %allow_hold_cert,
+        timeout = %timeout
     )
 )]
-pub async fn attest_remote(
-    gpu_evidences: &[DeviceEvidence],
+pub async fn verify_nvswitch_attestation(
+    nvswitch_evidences: &[NvSwitchEvidence],
     nonce: &str,
     verifier_url: Option<&str>,
     allow_hold_cert: Option<bool>,
@@ -90,8 +66,8 @@ pub async fn attest_remote(
     }
     let payload = json!({
         NONCE_KEY: nonce,
-        EVIDENCE_LIST_KEY: gpu_evidences,
-        ARCH_KEY: HOPPER_ARCH,
+        EVIDENCE_LIST_KEY: nvswitch_evidences,
+        ARCH_KEY: LS10_ARCH,
     });
     debug!(
         level = "attest_remote",
