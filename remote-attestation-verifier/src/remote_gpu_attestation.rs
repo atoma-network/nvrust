@@ -1,18 +1,34 @@
 use std::time::Duration;
 
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
-use tracing::{debug, error, instrument, Instrument};
+use tracing::{error, info, instrument, Instrument};
 
 use crate::{
     constants::{
-        ARCH_KEY, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY, HOPPER_ARCH, NONCE_KEY,
-        NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
+        ARCH_KEY, CLAIMS_VERSION_KEY, DEFAULT_CLAIMS_VERSION, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY,
+        HOPPER_ARCH, NONCE_KEY, NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER,
+        REMOTE_GPU_VERIFIER_SERVICE_URL,
     },
     errors::{AttestError, Result},
     types::DeviceEvidence,
     utils::get_allow_hold_cert,
 };
+
+/// Options for remote attestation
+#[derive(Debug, Default, Clone)]
+pub struct AttestRemoteOptions {
+    /// Optional URL of the verification service. If `None`, uses the default URL
+    pub verifier_url: Option<String>,
+    /// Optional flag to allow certificate hold status. If `None`, uses the system default
+    pub allow_hold_cert: Option<bool>,
+    /// Optional claims version. If `None`, uses the system default
+    pub claims_version: Option<String>,
+    /// Optional service key for authorization
+    pub service_key: Option<String>,
+    /// Optional request timeout
+    pub timeout: Option<Duration>,
+}
 
 /// Performs remote attestation of GPU devices by sending evidence to a verification service.
 ///
@@ -24,6 +40,7 @@ use crate::{
 /// * `gpu_evidences` - A slice of `DeviceEvidence` containing attestation data from GPUs
 /// * `nonce` - A unique string value to prevent replay attacks
 /// * `verifier_url` - Optional URL of the verification service. If `None`, uses the default URL
+///
 /// * `allow_hold_cert` - Optional flag to allow certificate hold status. If `None`, uses the system default
 /// * `timeout` - Optional request timeout. If `None`, uses the default timeout
 ///
@@ -62,23 +79,24 @@ use crate::{
 /// }
 /// ```
 #[instrument(
-    level = "debug",
+    level = "info",
     name = "attest_remote",
-    skip(gpu_evidences, nonce, verifier_url, allow_hold_cert),
-    fields(
-        nonce = %nonce,
-        verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL),
-        allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert()),
-    )
+    skip(gpu_evidences, nonce, remote_attestation_options),
+    fields(nonce = %nonce)
 )]
 pub async fn verify_gpu_attestation(
     gpu_evidences: &[DeviceEvidence],
     nonce: &str,
-    verifier_url: Option<&str>,
-    allow_hold_cert: Option<bool>,
-    timeout: Option<Duration>,
+    remote_attestation_options: AttestRemoteOptions,
 ) -> Result<(bool, Value)> {
-    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL);
+    let AttestRemoteOptions {
+        verifier_url,
+        allow_hold_cert,
+        claims_version,
+        service_key,
+        timeout,
+    } = remote_attestation_options;
+    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL.to_string());
     let allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert());
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -88,21 +106,31 @@ pub async fn verify_gpu_attestation(
             HeaderValue::from_static("true"),
         );
     }
+    if let Some(ref service_key) = service_key {
+        headers.insert(AUTHORIZATION, HeaderValue::from_str(service_key)?);
+    }
+    let claims_version = claims_version.unwrap_or(DEFAULT_CLAIMS_VERSION.to_string());
     let payload = json!({
         NONCE_KEY: nonce,
         EVIDENCE_LIST_KEY: gpu_evidences,
+        CLAIMS_VERSION_KEY: claims_version,
         ARCH_KEY: HOPPER_ARCH,
     });
-    debug!(
-        level = "attest_remote",
-        "Sending attestation request to NRAS url {verifier_url}"
+    info!(
+        level = "GPU::attest_remote",
+        verifier_url = %verifier_url,
+        claims_version = %claims_version,
+        nonce = %nonce,
+        timeout = ?timeout,
+        "Sending attestation request to NRAS url {verifier_url}, with claims version {claims_version}, nonce {nonce}"
     );
     let client = reqwest::Client::builder()
         .timeout(timeout.unwrap_or(DEFAULT_TIMEOUT))
         .build()?;
-    let request_span = tracing::info_span!("nras_request", url = %verifier_url);
+    let request_span =
+        tracing::info_span!("nras_request", url = %verifier_url, claims_version = %claims_version);
     let response = client
-        .post(verifier_url)
+        .post(&verifier_url)
         .headers(headers)
         .json(&payload)
         .send()
@@ -126,18 +154,29 @@ pub async fn verify_gpu_attestation(
     }
     match response.json::<Value>().await {
         Ok(response_json) => {
-            debug!(
-                level = "attest_remote",
+            info!(
+                level = "GPU::attest_remote",
+                verifier_url = %verifier_url,
+                claims_version = %claims_version,
+                nonce = %nonce,
+                timeout = ?timeout,
                 "Attestation request successful, response: {response_json}",
             );
             let main_jwt_token = crate::utils::get_overall_claims_token(&response_json)?;
             let decoded_main_jwt_token =
-                crate::utils::nras_token::decode_nras_token(verifier_url, &main_jwt_token).await?;
+                crate::utils::nras_token::decode_nras_token(&verifier_url, &main_jwt_token).await?;
             let attestation_result = decoded_main_jwt_token.overall_attestation_result;
             Ok((attestation_result, response_json))
         }
         Err(e) => {
-            error!(level = "attest_remote", "Failed to parse response: {e}");
+            error!(
+                level = "GPU::attest_remote",
+                verifier_url = %verifier_url,
+                claims_version = %claims_version,
+                nonce = %nonce,
+                timeout = ?timeout,
+                "Failed to parse response with error: {e}",
+            );
             return Err(AttestError::ParseResponseError(e));
         }
     }

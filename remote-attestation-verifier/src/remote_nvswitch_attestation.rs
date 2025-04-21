@@ -1,15 +1,14 @@
-use std::time::Duration;
-
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 use tracing::{debug, error, instrument, Instrument};
 
 use crate::{
     constants::{
-        ARCH_KEY, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY, HOPPER_ARCH, LS10_ARCH, NONCE_KEY,
-        NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
+        ARCH_KEY, CLAIMS_VERSION_KEY, DEFAULT_CLAIMS_VERSION, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY,
+        LS10_ARCH, NONCE_KEY, NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
     },
     errors::{AttestError, Result},
+    remote_gpu_attestation::AttestRemoteOptions,
     types::NvSwitchEvidence,
     utils::get_allow_hold_cert,
 };
@@ -41,20 +40,21 @@ use crate::{
 #[instrument(
     name = "verify_nvswitch_attestation",
     skip_all,
-    fields(
-        verifier_url = %verifier_url,
-        allow_hold_cert = %allow_hold_cert,
-        timeout = %timeout
-    )
+    fields(nonce = %nonce)
 )]
 pub async fn verify_nvswitch_attestation(
     nvswitch_evidences: &[NvSwitchEvidence],
     nonce: &str,
-    verifier_url: Option<&str>,
-    allow_hold_cert: Option<bool>,
-    timeout: Option<Duration>,
+    remote_attestation_options: AttestRemoteOptions,
 ) -> Result<(bool, Value)> {
-    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL);
+    let AttestRemoteOptions {
+        verifier_url,
+        allow_hold_cert,
+        timeout,
+        claims_version,
+        service_key,
+    } = remote_attestation_options;
+    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL.to_string());
     let allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert());
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -64,9 +64,14 @@ pub async fn verify_nvswitch_attestation(
             HeaderValue::from_static("true"),
         );
     }
+    if let Some(ref service_key) = service_key {
+        headers.insert(AUTHORIZATION, HeaderValue::from_str(service_key)?);
+    }
+    let claims_version = claims_version.unwrap_or(DEFAULT_CLAIMS_VERSION.to_string());
     let payload = json!({
         NONCE_KEY: nonce,
         EVIDENCE_LIST_KEY: nvswitch_evidences,
+        CLAIMS_VERSION_KEY: claims_version,
         ARCH_KEY: LS10_ARCH,
     });
     debug!(
@@ -78,7 +83,7 @@ pub async fn verify_nvswitch_attestation(
         .build()?;
     let request_span = tracing::info_span!("nras_request", url = %verifier_url);
     let response = client
-        .post(verifier_url)
+        .post(&verifier_url)
         .headers(headers)
         .json(&payload)
         .send()
@@ -108,7 +113,7 @@ pub async fn verify_nvswitch_attestation(
             );
             let main_jwt_token = crate::utils::get_overall_claims_token(&response_json)?;
             let decoded_main_jwt_token =
-                crate::utils::nras_token::decode_nras_token(verifier_url, &main_jwt_token).await?;
+                crate::utils::nras_token::decode_nras_token(&verifier_url, &main_jwt_token).await?;
             let attestation_result = decoded_main_jwt_token.overall_attestation_result;
             Ok((attestation_result, response_json))
         }
