@@ -7,13 +7,14 @@ use tracing::{debug, error, instrument, Instrument};
 use crate::{
     constants::{
         ARCH_KEY, CLAIMS_VERSION_KEY, DEFAULT_CLAIMS_VERSION, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY,
-        LS10_ARCH, NONCE_KEY, NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
+        LS10_ARCH, NONCE_KEY, NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_NVSWITCH_VERIFIER_SERVICE_URL,
     },
     errors::{AttestError, NscqError, Result},
     remote_gpu_attestation::AttestRemoteOptions,
     types::NvSwitchEvidence,
     utils::get_allow_hold_cert,
 };
+
 
 #[instrument(name = "collect_nvswitch_evidence", skip_all)]
 pub fn collect_nvswitch_evidence(
@@ -79,7 +80,7 @@ pub async fn verify_nvswitch_attestation(
         claims_version,
         service_key,
     } = remote_attestation_options;
-    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL.to_string());
+    let verifier_url = verifier_url.unwrap_or(REMOTE_NVSWITCH_VERIFIER_SERVICE_URL.to_string());
     let allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert());
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
