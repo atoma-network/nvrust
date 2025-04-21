@@ -68,11 +68,7 @@ async fn test_attest_working_evidence() {
 #[tokio::test]
 async fn test_attest_new_gpu_evidence() {
     let (evidence, nonce) = generate_new_gpu_evidence();
-    let attest_options = AttestRemoteOptions {
-        claims_version: Some("3.0".to_string()),
-        ..Default::default()
-    };
-    match verify_gpu_attestation(&evidence, &nonce, attest_options).await {
+    match verify_gpu_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);
@@ -86,11 +82,7 @@ async fn test_attest_new_gpu_evidence() {
 #[tokio::test]
 async fn test_attest_new_nvswitch_evidence() {
     let (evidence, nonce) = generate_new_nvswitch_evidence();
-    let attest_options = AttestRemoteOptions {
-        claims_version: Some("3.0".to_string()),
-        ..Default::default()
-    };
-    match verify_nvswitch_attestation(&evidence, &nonce, attest_options).await {
+    match verify_nvswitch_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
         Ok((attestation_passed, jwt)) => {
             println!("Attestation passed: {}", attestation_passed);
             println!("JWT: {}", jwt);
