@@ -1080,6 +1080,7 @@ dependencies = [
  "base64",
  "hex",
  "jsonwebtoken",
+ "nscq",
  "nvml-wrapper",
  "once_cell",
  "rand",

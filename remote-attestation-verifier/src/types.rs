@@ -23,6 +23,9 @@ pub struct DeviceEvidence {
 /// Both fields are stored as base64 encoded strings.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct NvSwitchEvidence {
+    /// The UUID of the NVSwitch device
+    pub uuid: String,
+
     /// The certificate chain for the NVSwitch device, in base64 encoded format
     pub certificate: String,
 

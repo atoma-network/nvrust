@@ -10,8 +10,8 @@ authors = ["Atoma Network"]
 base64 = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { workspace = true }
+nscq = { workspace = true }
 once_cell = { workspace = true }
-nvml-wrapper = { workspace = true }
 rand = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }
@@ -21,3 +21,8 @@ tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
 url = { workspace = true }
 x509-parser = { workspace = true }
+
+[dev-dependencies]
+nvml-wrapper = { workspace = true }
+rand = { workspace = true }
+

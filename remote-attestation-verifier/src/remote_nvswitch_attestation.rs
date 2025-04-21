@@ -1,3 +1,5 @@
+use base64::{engine::general_purpose::STANDARD, Engine};
+use nscq::NscqHandler;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde_json::{json, Value};
 use tracing::{debug, error, instrument, Instrument};
@@ -7,11 +9,34 @@ use crate::{
         ARCH_KEY, CLAIMS_VERSION_KEY, DEFAULT_CLAIMS_VERSION, DEFAULT_TIMEOUT, EVIDENCE_LIST_KEY,
         LS10_ARCH, NONCE_KEY, NVIDIA_OCSP_ALLOW_CERT_HOLD_HEADER, REMOTE_GPU_VERIFIER_SERVICE_URL,
     },
-    errors::{AttestError, Result},
+    errors::{AttestError, NscqError, Result},
     remote_gpu_attestation::AttestRemoteOptions,
     types::NvSwitchEvidence,
     utils::get_allow_hold_cert,
 };
+
+#[instrument(name = "collect_nvswitch_evidence", skip_all)]
+pub fn collect_nvswitch_evidence(
+    nscq: &NscqHandler,
+    nonce: &[u8; 32],
+) -> Result<Vec<NvSwitchEvidence>> {
+    let uuids = nscq.get_all_switch_uuid().map_err(NscqError::from)?;
+    let mut evidence_vec = Vec::with_capacity(uuids.len());
+    for uuid in &uuids {
+        let evidence = nscq
+            .get_switch_attestation_report(uuid, nonce)
+            .map_err(NscqError::from)?;
+        let certificate = nscq
+            .get_switch_attestation_certificate_chain(uuid)
+            .map_err(NscqError::from)?;
+        evidence_vec.push(NvSwitchEvidence {
+            uuid: uuid.to_string(),
+            evidence: STANDARD.encode(evidence),
+            certificate: STANDARD.encode(certificate),
+        });
+    }
+    Ok(evidence_vec)
+}
 
 /// Verifies the attestation of an NVSwitch device
 ///
