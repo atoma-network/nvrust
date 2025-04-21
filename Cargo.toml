@@ -1,9 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "nvidia-remote-attestation-gpu",
-    "remote-attestation",
-    "nscq",
-]
+members = ["topology", "remote-attestation", "nscq"]
 
 [workspace.package]
 version = "0.1.0"
