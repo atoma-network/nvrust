@@ -34,7 +34,7 @@ pub const fn nscq_error_to_str(rc: NscqRc) -> &'static str {
 ///
 /// * `Ok(NscqSession)` if successful, or an error code if it fails.
 pub fn nscq_session_create(flags: u32) -> Result<NscqSession, NscqRc> {
-    let session_result = unsafe { super::bindings::nscq_session_create(flags) };
+    let session_result = unsafe { super::bindings::NSCQ_SESSION_CREATE(flags) };
     if session_result.rc != 0 {
         return Err(session_result.rc);
     }
@@ -47,7 +47,7 @@ pub fn nscq_session_create(flags: u32) -> Result<NscqSession, NscqRc> {
 ///
 /// * `session` - The session to destroy
 pub fn nscq_session_destroy(session: NscqSession) {
-    unsafe { super::bindings::nscq_session_destroy(session) }
+    unsafe { super::bindings::NSCQ_SESSION_DESTROY(session) }
 }
 
 /// Mounts a UUID to the session.
@@ -62,7 +62,7 @@ pub fn nscq_session_destroy(session: NscqSession) {
 ///
 /// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_mount(session: NscqSession, uuid: NscqUuid, flags: u32) -> Result<(), NscqRc> {
-    let result = unsafe { super::bindings::nscq_session_mount(session, uuid, flags) };
+    let result = unsafe { super::bindings::NSCQ_SESSION_MOUNT(session, uuid, flags) };
     if result != 0 {
         return Err(result);
     }
@@ -80,7 +80,7 @@ pub fn nscq_session_mount(session: NscqSession, uuid: NscqUuid, flags: u32) -> R
 ///
 /// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_unmount(session: NscqSession, uuid: NscqUuid) -> Result<(), NscqRc> {
-    let result = unsafe { super::bindings::nscq_session_unmount(session, uuid) };
+    let result = unsafe { super::bindings::NSCQ_SESSION_UNMOUNT(session, uuid) };
     if result != 0 {
         Err(result)
     } else {
@@ -100,7 +100,7 @@ pub fn nscq_session_unmount(session: NscqSession, uuid: NscqUuid) -> Result<(), 
 /// * `Ok(NscqLabel)` if successful, or an error code if it fails.
 pub fn nscq_uuid_to_label(uuid: NscqUuid, flags: u32) -> Result<NscqLabel, NscqRc> {
     let label = NscqLabel::new();
-    let res = unsafe { super::bindings::nscq_uuid_to_label(uuid, &label, flags) };
+    let res = unsafe { super::bindings::NSCQ_UUID_TO_LABEL(uuid, &label, flags) };
     if res != 0 {
         Err(res)
     } else {
@@ -130,7 +130,7 @@ pub fn nscq_session_path_observe(
 ) -> Result<(), NscqRc> {
     let c_path = std::ffi::CString::new(path).map_err(|_| -5)?;
     let res = unsafe {
-        super::bindings::nscq_session_path_observe(
+        super::bindings::NSCQ_SESSION_PATH_OBSERVE(
             session,
             c_path.as_ptr(),
             callback.as_ptr(),
@@ -167,7 +167,7 @@ pub fn nscq_session_path_register_observer(
 ) -> Result<NscqObserver, NscqRc> {
     let c_path = std::ffi::CString::new(path).map_err(|_| -5)?;
     let res = unsafe {
-        super::bindings::nscq_session_path_register_observer(
+        super::bindings::NSCQ_SESSION_PATH_REGISTER_OBSERVER(
             session,
             c_path.as_ptr(),
             callback.as_ptr(),
@@ -189,7 +189,7 @@ pub fn nscq_session_path_register_observer(
 /// * `observer` - The observer to deregister.
 #[allow(dead_code)]
 pub fn nscq_observer_deregister(observer: NscqObserver) {
-    unsafe { super::bindings::nscq_observer_deregister(observer) }
+    unsafe { super::bindings::NSCQ_OBSERVER_DEREGISTER(observer) }
 }
 
 /// Observes a session.
@@ -204,7 +204,7 @@ pub fn nscq_observer_deregister(observer: NscqObserver) {
 /// * `Ok(())` if successful, or an error code if it fails.
 #[allow(dead_code)]
 pub fn nscq_observer_observe(observer: NscqObserver, flags: u32) -> Result<(), NscqRc> {
-    let res = unsafe { super::bindings::nscq_observer_observe(observer, flags) };
+    let res = unsafe { super::bindings::NSCQ_OBSERVER_OBSERVE(observer, flags) };
     if res != 0 {
         Err(res)
     } else {
@@ -223,7 +223,7 @@ pub fn nscq_observer_observe(observer: NscqObserver, flags: u32) -> Result<(), N
 ///
 /// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_observe(session: NscqSession, flags: u32) -> Result<(), NscqRc> {
-    let res = unsafe { super::bindings::nscq_session_observe(session, flags) };
+    let res = unsafe { super::bindings::NSCQ_SESSION_OBSERVE(session, flags) };
     if res != 0 {
         Err(res)
     } else {
@@ -250,7 +250,7 @@ pub fn nscq_session_set_input(
     flags: u32,
 ) -> Result<(), NscqRc> {
     let res =
-        unsafe { super::bindings::nscq_session_set_input(session, flags, input_arg, input_size) };
+        unsafe { super::bindings::NSCQ_SESSION_SET_INPUT(session, flags, input_arg, input_size) };
     if res != 0 {
         Err(res)
     } else {

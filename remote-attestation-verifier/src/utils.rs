@@ -2,13 +2,12 @@ use crate::{
     constants::NV_ALLOW_HOLD_CERT_KEY,
     errors::{AttestError, Result},
 };
-use once_cell::sync::Lazy;
 use serde_json::Value;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 /// Global state to control certificate hold status.
 /// This is initialized as `None` and can be set at runtime.
-static CERT_HOLD_STATUS: Lazy<Mutex<Option<bool>>> = Lazy::new(|| Mutex::new(None));
+static CERT_HOLD_STATUS: LazyLock<Mutex<Option<bool>>> = LazyLock::new(|| Mutex::new(None));
 
 // Sets whether certificates should be allowed to be held.
 ///
