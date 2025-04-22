@@ -837,18 +837,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvidia-remote-attestation-gpu"
-version = "0.1.0"
-dependencies = [
- "nscq",
- "nvml-wrapper",
- "once_cell",
- "rand",
- "thiserror 2.0.12",
- "tracing",
-]
-
-[[package]]
 name = "nvml-wrapper"
 version = "0.10.0"
 source = "git+https://github.com/atoma-network/nvml-wrapper?branch=main#0d416436404473bc11795dacc1c0c5a995d9aa09"
@@ -1073,7 +1061,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "remote-attestation"
+name = "remote-attestation-verifier"
 version = "0.1.0"
 dependencies = [
  "base64",
@@ -1320,9 +1308,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "signal-hook-registry"
-version = "1.4.2"
+version = "1.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9e9e0b4211b72e7b8b6e85c807d36c212bdb33ea8587f7569562a84df5465b1"
+checksum = "9203b8055f63a2a00e2f593bb0510367fe707d7ff1e5c872de2f537b339e5410"
 dependencies = [
  "libc",
 ]
@@ -1594,6 +1582,18 @@ dependencies = [
  "futures-sink",
  "pin-project-lite",
  "tokio",
+]
+
+[[package]]
+name = "topology"
+version = "0.1.0"
+dependencies = [
+ "nscq",
+ "nvml-wrapper",
+ "once_cell",
+ "rand",
+ "thiserror 2.0.12",
+ "tracing",
 ]
 
 [[package]]

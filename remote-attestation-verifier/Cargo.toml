@@ -1,8 +1,8 @@
 [package]
-name = "remote-attestation"
+name = "remote-attestation-verifier"
 version = "0.1.0"
 edition = "2021"
-description = "Remote attestation for confidential compute NVIDIA GPUs"
+description = "Remote attestation verifier for NVIDIA confidential computing"
 license = "MIT OR Apache-2.0"
 authors = ["Atoma Network"]
 
