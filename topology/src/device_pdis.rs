@@ -1,6 +1,6 @@
 use crate::error::{NvidiaRemoteAttestationError, Result};
 
-/// The expected length of the SPDM GET_MEASUREMENT request message part.
+/// The expected length of the SPDM `GET_MEASUREMENT` request message part.
 const LENGTH_OF_SPDM_GET_MEASUREMENT_REQUEST_MESSAGE: usize = 37;
 
 /// The total number of PDIS.
@@ -23,8 +23,13 @@ pub struct SwitchDevicePdis {
 /// # Returns
 ///
 /// * `Ok(device_pdis)` - If the Device PDIS is found.
-/// * `Err(NvidiaRemoteAttestationError::InvalidReportLength)` - If the report is too short to contain a SPDM GET_MEASUREMENT request message.
+/// * `Err(NvidiaRemoteAttestationError::InvalidReportLength)` - If the report is too short to contain a SPDM `GET_MEASUREMENT` request message.
 /// * `Err(NvidiaRemoteAttestationError::InvalidSwitchPdisLength)` - If the Switch Device PDIS is not found.
+///
+/// # Errors
+///
+/// * `NvidiaRemoteAttestationError::InvalidReportLength` - If the report is too short to contain a SPDM `GET_MEASUREMENT` request message.
+/// * `NvidiaRemoteAttestationError::InvalidSwitchPdisLength` - If the Switch Device PDIS is not found.
 pub fn extract_device_pdis_in_gpu_attestation_report_data(
     report: &[u8],
 ) -> Result<SwitchDevicePdis> {
@@ -141,8 +146,7 @@ fn check_spdm_measurement_length(
     if spdm_measurement.len() < length_of_field {
         return Err(NvidiaRemoteAttestationError::InvalidSpdmMeasurementLength {
             message: format!(
-                "{} is too short to contain a SPDM GET_MEASUREMENT request message",
-                field_name
+                "{field_name} is too short to contain a SPDM GET_MEASUREMENT request message"
             ),
             field: field_name.to_string(),
             length_of_field,

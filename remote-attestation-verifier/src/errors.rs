@@ -46,21 +46,22 @@ pub enum NscqError {
     NscqRcErrorUnspecified,
 }
 
+#[allow(clippy::fallible_impl_from)]
 impl From<i8> for NscqError {
     fn from(rc: i8) -> Self {
         match rc {
-            0 => NscqError::NscqRcSuccess,
-            1 => NscqError::NscqRcWarningRdtInitFailure,
-            -1 => NscqError::NscqRcErrorNotImplemented,
-            -2 => NscqError::NscqRcErrorInvalidUuid,
-            -3 => NscqError::NscqRcErrorResourceNotMountable,
-            -4 => NscqError::NscqRcErrorOverflow,
-            -5 => NscqError::NscqRcErrorUnexpectedValue,
-            -6 => NscqError::NscqRcErrorUnsupportedDrv,
-            -7 => NscqError::NscqRcErrorDrv,
-            -8 => NscqError::NscqRcErrorTimeout,
-            -127 => NscqError::NscqRcErrorExt,
-            -128 => NscqError::NscqRcErrorUnspecified,
+            0 => Self::NscqRcSuccess,
+            1 => Self::NscqRcWarningRdtInitFailure,
+            -1 => Self::NscqRcErrorNotImplemented,
+            -2 => Self::NscqRcErrorInvalidUuid,
+            -3 => Self::NscqRcErrorResourceNotMountable,
+            -4 => Self::NscqRcErrorOverflow,
+            -5 => Self::NscqRcErrorUnexpectedValue,
+            -6 => Self::NscqRcErrorUnsupportedDrv,
+            -7 => Self::NscqRcErrorDrv,
+            -8 => Self::NscqRcErrorTimeout,
+            -127 => Self::NscqRcErrorExt,
+            -128 => Self::NscqRcErrorUnspecified,
             _ => {
                 tracing::error!("Unknown NSCQ Rc error status: {rc}. This should never happen.");
                 panic!("Unknown NSCQ Rc error status: {rc}");
@@ -71,6 +72,6 @@ impl From<i8> for NscqError {
 
 impl std::fmt::Display for NscqError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }

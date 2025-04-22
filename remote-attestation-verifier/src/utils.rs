@@ -17,6 +17,10 @@ static CERT_HOLD_STATUS: Lazy<Mutex<Option<bool>>> = Lazy::new(|| Mutex::new(Non
 /// # Arguments
 ///
 /// * `value` - A boolean indicating whether to allow certificate holding.
+///
+/// # Panics
+///
+/// * `AttestError::JsonError` - If there is an error parsing the JSON token
 pub fn set_allow_hold_cert(value: bool) {
     let mut status = CERT_HOLD_STATUS.lock().unwrap();
     *status = Some(value);
@@ -25,18 +29,21 @@ pub fn set_allow_hold_cert(value: bool) {
 /// Determines whether certificates should be allowed to be held.
 ///
 /// This function first checks the global certificate hold status.
-/// If not set, it falls back to checking the "NV_ALLOW_HOLD_CERT" environment variable.
+/// If not set, it falls back to checking the `NV_ALLOW_HOLD_CERT` environment variable.
 ///
 /// # Returns
 ///
 /// * `true` if certificates should be allowed to be held
 /// * `false` otherwise
+///
+/// # Panics
+///
+/// * `AttestError::JsonError` - If there is an error parsing the JSON token
 pub fn get_allow_hold_cert() -> bool {
-    if let Some(value) = *CERT_HOLD_STATUS.lock().unwrap() {
-        value
-    } else {
-        std::env::var(NV_ALLOW_HOLD_CERT_KEY).unwrap_or_default() == "true"
-    }
+    CERT_HOLD_STATUS.lock().unwrap().map_or_else(
+        || std::env::var(NV_ALLOW_HOLD_CERT_KEY).unwrap_or_default() == "true",
+        |value| value,
+    )
 }
 
 /// Gets the overall claims token from a JSON token structure.
@@ -183,7 +190,7 @@ pub mod nras_token {
         let host = parsed_url.host_str().unwrap_or("");
         let port = parsed_url
             .port()
-            .map(|p| format!(":{}", p))
+            .map(|p| format!(":{p}"))
             .unwrap_or_default();
 
         // Construct the JWKS URL

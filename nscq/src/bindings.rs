@@ -23,7 +23,7 @@ use std::ffi::c_void;
 fn find_library(name: &str) -> Option<String> {
     let paths = std::env::var("LD_LIBRARY_PATH").unwrap_or_default();
     for path in paths.split(':') {
-        let lib_path = format!("{}/lib{}.so", path, name);
+        let lib_path = format!("{path}/lib{name}.so");
         if std::path::Path::new(&lib_path).exists() {
             return Some(lib_path);
         }

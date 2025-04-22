@@ -13,13 +13,13 @@ use super::{
     },
 };
 
-/// Bit position for the Trusted NVLink Mode (TNVL) status
+/// Bit position for the Trusted `NVLink` Mode (TNVL) status
 const TNVL_BIT_POSITION: usize = 0;
 /// Bit position for the lock status
 const LOCK_BIT_POSITION: usize = 1;
-/// Path for UUID, this is complete path
+/// Path for `UUID`, this is complete path
 const UUID_PATH: &str = "/drv/nvswitch/{device}/uuid";
-/// Path for Trusted NVLink Mode (TNVL) status, this is partial path
+/// Path for Trusted `NVLink` Mode (TNVL) status, this is partial path
 const TNVL_STATUS_PATH: &str = "/config/pcie_mode";
 /// Path for attestation report, this is partial path
 const ATTESTATION_REPORT_PATH: &str = "/config/attestation_report";
@@ -31,8 +31,9 @@ const ALL_SWITCHES: &str = "/{nvswitch}";
 const ARCH: &str = "/id/arch";
 
 /// Handler for NSCQ (NVIDIA Switch Control Query) operations.
+///
 /// This struct provides methods to interact with the NSCQ service, including
-/// observing paths, retrieving UUIDs, architecture information, Trusted NVLink Mode (TNVL) status,
+/// observing paths, retrieving `UUIDs`, architecture information, Trusted `NVLink` Mode (TNVL) status,
 /// attestation certificates, and attestation reports.
 pub struct NscqHandler {
     session: Session,
@@ -45,9 +46,13 @@ impl NscqHandler {
     ///
     /// * `Ok(NscqHandler)` if the session is created successfully.
     /// * `Err(NscqRc)` if there is an error creating the session.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error creating the session.
     pub fn new() -> Result<Self, NscqRc> {
         let session = Session::new(1, vec![])?;
-        Ok(NscqHandler { session })
+        Ok(Self { session })
     }
 
     /// Get all switch UUIDs.
@@ -56,12 +61,16 @@ impl NscqHandler {
     ///
     /// * `Ok(Vec<String>)` containing all switch UUIDs if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the UUIDs.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the UUIDs.
     pub fn get_all_switch_uuid(&self) -> Result<Vec<String>, NscqRc> {
         let user_data_ptr: *mut Vec<Result<String, NscqRc>> = Box::into_raw(Box::new(Vec::new()));
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             UUID_PATH,
-            NscqCallback::Uuid(uuid_callback),
+            &NscqCallback::Uuid(uuid_callback),
             user_data_ffi,
             0,
         )?;
@@ -75,13 +84,17 @@ impl NscqHandler {
     ///
     /// * `Ok(HashMap<String, NscqArch>)` containing all switch architecture information if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the architecture information.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the architecture information.
     pub fn get_switch_architecture(&self) -> Result<HashMap<String, NscqArch>, NscqRc> {
         let user_data_ptr: *mut Vec<Result<(String, NscqArch), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             &format!("{ALL_SWITCHES}{ARCH}"),
-            NscqCallback::Architecture(architecture_callback),
+            &NscqCallback::Architecture(architecture_callback),
             user_data_ffi,
             0,
         )?;
@@ -89,7 +102,7 @@ impl NscqHandler {
         architecture.into_iter().collect()
     }
 
-    /// Get the Trusted NVLink Mode (TNVL) status of a specific switch.
+    /// Get the Trusted `NVLink` Mode (TNVL) status of a specific switch.
     ///
     /// # Arguments
     ///
@@ -97,15 +110,19 @@ impl NscqHandler {
     ///
     /// # Returns
     ///
-    /// * `Ok(NscqTnvlStatus)` containing the Trusted NVLink Mode (TNVL) status of the switch if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
+    /// * `Ok(NscqTnvlStatus)` containing the Trusted `NVLink` Mode (TNVL) status of the switch if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
     pub fn get_switch_tnvl_status(&self, device: &str) -> Result<NscqTnvlStatus, NscqRc> {
         let user_data_ptr: *mut Vec<Result<(String, NscqTnvlStatus), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             &format!("/{device}{TNVL_STATUS_PATH}"),
-            NscqCallback::Tnvl(tnvl_status_callback),
+            &NscqCallback::Tnvl(tnvl_status_callback),
             user_data_ffi,
             0,
         )?;
@@ -115,19 +132,23 @@ impl NscqHandler {
         Ok(tnvl_status[device])
     }
 
-    /// Get the Trusted NVLink Mode (TNVL) status of all switches.
+    /// Get the Trusted `NVLink` Mode (TNVL) status of all switches.
     ///
     /// # Returns
     ///
-    /// * `Ok(HashMap<String, NscqTnvlStatus>)` containing the Trusted NVLink Mode (TNVL) status of all switches if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
+    /// * `Ok(HashMap<String, NscqTnvlStatus>)` containing the Trusted `NVLink` Mode (TNVL) status of all switches if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
     pub fn get_all_switch_tnvl_status(&self) -> Result<HashMap<String, NscqTnvlStatus>, NscqRc> {
         let user_data_ptr: *mut Vec<Result<(String, NscqTnvlStatus), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             &format!("{ALL_SWITCHES}{TNVL_STATUS_PATH}"),
-            NscqCallback::Tnvl(tnvl_status_callback),
+            &NscqCallback::Tnvl(tnvl_status_callback),
             user_data_ffi,
             0,
         )?;
@@ -135,7 +156,7 @@ impl NscqHandler {
         tnvl_status.into_iter().collect()
     }
 
-    /// Check if the switch is in Trusted NVLink Mode (TNVL) mode.
+    /// Check if the switch is in Trusted `NVLink` Mode (TNVL) mode.
     ///
     /// # Arguments
     ///
@@ -143,8 +164,12 @@ impl NscqHandler {
     ///
     /// # Returns
     ///
-    /// * `Ok(bool)` indicating whether the switch is in Trusted NVLink Mode (TNVL) mode if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
+    /// * `Ok(bool)` indicating whether the switch is in Trusted `NVLink` Mode (TNVL) mode if successful.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
     pub fn is_switch_tnvl_mode(&self, device: &str) -> Result<bool, NscqRc> {
         let tnvl_status = self.get_switch_tnvl_status(device)?;
         Ok(((tnvl_status >> TNVL_BIT_POSITION) & 1) == 1)
@@ -159,7 +184,11 @@ impl NscqHandler {
     /// # Returns
     ///
     /// * `Ok(bool)` indicating whether the switch is in lock mode if successful.
-    /// * `Err(NscqRc)` if there is an error retrieving the Trusted NVLink Mode (TNVL) status.
+    /// * `Err(NscqRc)` if there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the Trusted `NVLink` Mode (TNVL) status.
     pub fn is_switch_lock_mode(&self, device: &str) -> Result<bool, NscqRc> {
         let tnvl_status = self.get_switch_tnvl_status(device)?;
         Ok(((tnvl_status >> LOCK_BIT_POSITION) & 1) == 1)
@@ -175,6 +204,10 @@ impl NscqHandler {
     ///
     /// * `Ok(Vec<u8>)` containing the attestation certificate chain if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the certificate chain.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the certificate chain.
     pub fn get_switch_attestation_certificate_chain(
         &self,
         device: &str,
@@ -184,7 +217,7 @@ impl NscqHandler {
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             &format!("/{device}{ATTESTATION_CERTIFICATE_CHAIN_PATH}"),
-            NscqCallback::AttestationCertificate(attestation_certificate_callback),
+            &NscqCallback::AttestationCertificate(attestation_certificate_callback),
             user_data_ffi,
             0,
         )?;
@@ -198,8 +231,12 @@ impl NscqHandler {
     ///
     /// # Returns
     ///
-    /// * `Ok(HashMap<String, Vec<u8>>) containing the attestation certificate chain for all switches if successful.
+    /// * `Ok(HashMap<String, Vec<u8>>)` containing the attestation certificate chain for all switches if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the certificate chain.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the certificate chain.
     pub fn get_all_switch_attestation_certificate_chain(
         &self,
     ) -> Result<HashMap<String, Vec<u8>>, NscqRc> {
@@ -208,7 +245,7 @@ impl NscqHandler {
         let user_data_ffi: UserData = user_data_ptr as UserData;
         self.session.path_observe(
             &format!("{ALL_SWITCHES}{ATTESTATION_CERTIFICATE_CHAIN_PATH}"),
-            NscqCallback::AttestationCertificate(attestation_certificate_callback),
+            &NscqCallback::AttestationCertificate(attestation_certificate_callback),
             user_data_ffi,
             0,
         )?;
@@ -227,13 +264,21 @@ impl NscqHandler {
     ///
     /// * `Ok([u8; NSCQ_ATTESTATION_REPORT_SIZE])` containing the attestation report if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the attestation report.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the attestation report.
+    ///
+    /// # Panics
+    ///
+    /// * `NscqRc` - If there is an error retrieving the attestation report.
     pub fn get_switch_attestation_report(
         &self,
         device: &str,
-        nonce: &[u8; 32],
+        nonce: &mut [u8; 32],
     ) -> Result<[u8; NSCQ_ATTESTATION_REPORT_SIZE], NscqRc> {
-        let nonce_ptr = nonce.as_ptr() as *mut c_void;
-        let nonce_len = nonce.len() as u32;
+        let nonce_ptr = nonce.as_mut_ptr().cast::<c_void>();
+        let nonce_len = u32::try_from(nonce.len()).expect("Nonce length is too large");
         let input_arg = unsafe { &mut *nonce_ptr };
         self.session.set_input(input_arg, nonce_len, 0)?;
 
@@ -243,7 +288,7 @@ impl NscqHandler {
 
         self.session.path_observe(
             &format!("/{device}{ATTESTATION_REPORT_PATH}"),
-            NscqCallback::AttestationReport(attestation_report_callback),
+            &NscqCallback::AttestationReport(attestation_report_callback),
             user_data_ffi,
             0,
         )?;
@@ -263,12 +308,20 @@ impl NscqHandler {
     ///
     /// * `Ok(HashMap<String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]>)` containing the attestation report for all switches if successful.
     /// * `Err(NscqRc)` if there is an error retrieving the attestation report.
+    ///
+    /// # Errors
+    ///
+    /// * `NscqRc` - If there is an error retrieving the attestation report.
+    ///
+    /// # Panics
+    ///
+    /// * `NscqRc` - If there is an error retrieving the attestation report.
     pub fn get_all_switch_attestation_report(
         &self,
-        nonce: &[u8; 32],
+        nonce: &mut [u8; 32],
     ) -> Result<HashMap<String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]>, NscqRc> {
-        let nonce_ptr = nonce.as_ptr() as *mut c_void;
-        let nonce_len = nonce.len() as u32;
+        let nonce_ptr = nonce.as_mut_ptr().cast::<c_void>();
+        let nonce_len = u32::try_from(nonce.len()).expect("Nonce length is too large");
         let input_arg = unsafe { &mut *nonce_ptr };
         self.session.set_input(input_arg, nonce_len, 0)?;
 
@@ -279,7 +332,7 @@ impl NscqHandler {
 
         self.session.path_observe(
             &format!("{ALL_SWITCHES}{ATTESTATION_REPORT_PATH}"),
-            NscqCallback::AttestationReport(attestation_report_callback),
+            &NscqCallback::AttestationReport(attestation_report_callback),
             user_data_ffi,
             0,
         )?;
@@ -296,7 +349,7 @@ unsafe extern "C" fn uuid_callback(
     user_data: UserData,
 ) {
     let label = nscq_uuid_to_label(uuid, 0);
-    let vec_ptr = user_data as *mut Vec<Result<String, NscqRc>>;
+    let vec_ptr = user_data.cast::<Vec<Result<String, NscqRc>>>();
     let vec_ref: &mut Vec<Result<String, NscqRc>> = unsafe { &mut *vec_ptr };
     if rc == 0 {
         match label {
@@ -316,7 +369,7 @@ unsafe extern "C" fn architecture_callback(
     user_data: UserData,
 ) {
     let label = nscq_uuid_to_label(device, 0);
-    let vec_ptr = user_data as *mut Vec<Result<(String, NscqArch), NscqRc>>;
+    let vec_ptr = user_data.cast::<Vec<Result<(String, NscqArch), NscqRc>>>();
     let vec_ref: &mut Vec<Result<(String, NscqArch), NscqRc>> = unsafe { &mut *vec_ptr };
     if rc == 0 {
         match label {
@@ -328,7 +381,7 @@ unsafe extern "C" fn architecture_callback(
     }
 }
 
-/// Callback function for Trusted NVLink Mode (TNVL) status observation.
+/// Callback function for Trusted `NVLink` Mode (TNVL) status observation.
 unsafe extern "C" fn tnvl_status_callback(
     device: NscqUuid,
     rc: NscqRc,
@@ -336,7 +389,7 @@ unsafe extern "C" fn tnvl_status_callback(
     user_data: UserData,
 ) {
     let label = nscq_uuid_to_label(device, 0);
-    let vec_ptr = user_data as *mut Vec<Result<(String, NscqArch), NscqRc>>;
+    let vec_ptr = user_data.cast::<Vec<Result<(String, NscqArch), NscqRc>>>();
     let vec_ref: &mut Vec<Result<(String, NscqArch), NscqRc>> = unsafe { &mut *vec_ptr };
     if rc == 0 {
         match label {
@@ -357,7 +410,7 @@ unsafe extern "C" fn attestation_report_callback(
 ) {
     let label = nscq_uuid_to_label(device, 0);
     let vec_ptr =
-        user_data as *mut Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>>;
+        user_data.cast::<Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>>>();
     let vec_ref: &mut Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>> =
         unsafe { &mut *vec_ptr };
     if rc == 0 {
@@ -378,7 +431,7 @@ unsafe extern "C" fn attestation_certificate_callback(
     user_data: UserData,
 ) {
     let label = nscq_uuid_to_label(device, 0);
-    let vec_ptr = user_data as *mut Vec<Result<(String, Vec<u8>), NscqRc>>;
+    let vec_ptr = user_data.cast::<Vec<Result<(String, Vec<u8>), NscqRc>>>();
     let vec_ref: &mut Vec<Result<(String, Vec<u8>), NscqRc>> = unsafe { &mut *vec_ptr };
     if rc == 0 {
         match label {

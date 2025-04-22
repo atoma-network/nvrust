@@ -100,25 +100,22 @@ pub fn gpu_topology_check(
                 length: switch_pdis_set.len(),
             });
         }
-        match unique_switch_pdis_set {
-            Some(ref set) => {
-                if set != &switch_pdis_set {
-                    tracing::error!(
+        if let Some(ref set) = unique_switch_pdis_set {
+            if set != &switch_pdis_set {
+                tracing::error!(
                         "Invalid switch PDIS topology, we found a mismatch between the expected and actual switch PDIS topology: expected {:?}, got {:?}",
                         set,
                         switch_pdis_set
                     );
-                    return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisTopology {
-                        message: "Invalid switch PDIS topology".to_string(),
-                        expected: set.clone(),
-                        actual: switch_pdis_set,
-                    });
-                }
+                return Err(NvidiaRemoteAttestationError::InvalidSwitchPdisTopology {
+                    message: "Invalid switch PDIS topology".to_string(),
+                    expected: set.clone(),
+                    actual: switch_pdis_set,
+                });
             }
-            None => {
-                tracing::info!("GPU Topology check: Setting initial unique switches PDIS");
-                unique_switch_pdis_set = Some(switch_pdis_set);
-            }
+        } else {
+            tracing::info!("GPU Topology check: Setting initial unique switches PDIS");
+            unique_switch_pdis_set = Some(switch_pdis_set);
         }
     }
     tracing::info!("GPU topology check passed successfully");
@@ -188,25 +185,20 @@ pub fn switch_topology_check(
                 },
             );
         }
-        match unique_switch_device_gpu_pdis_set {
-            Some(ref set) => {
-                if set != &switch_device_gpu_pdis_set {
-                    tracing::error!("Invalid switch device GPU PDIS topology, we found a mismatch between the expected and actual switch device GPU PDIS topology: expected {:?}, got {:?}", set, switch_device_gpu_pdis_set);
-                    return Err(
-                        NvidiaRemoteAttestationError::InvalidSwitchDeviceGpuPdisTopology {
-                            message: "Invalid switch device GPU PDIS topology".to_string(),
-                            expected: set.clone(),
-                            actual: switch_device_gpu_pdis_set,
-                        },
-                    );
-                }
-            }
-            None => {
-                tracing::info!(
-                    "Switch Topology check: Setting initial unique switch device GPU PDIS"
+        if let Some(ref set) = unique_switch_device_gpu_pdis_set {
+            if set != &switch_device_gpu_pdis_set {
+                tracing::error!("Invalid switch device GPU PDIS topology, we found a mismatch between the expected and actual switch device GPU PDIS topology: expected {:?}, got {:?}", set, switch_device_gpu_pdis_set);
+                return Err(
+                    NvidiaRemoteAttestationError::InvalidSwitchDeviceGpuPdisTopology {
+                        message: "Invalid switch device GPU PDIS topology".to_string(),
+                        expected: set.clone(),
+                        actual: switch_device_gpu_pdis_set,
+                    },
                 );
-                unique_switch_device_gpu_pdis_set = Some(switch_device_gpu_pdis_set);
             }
+        } else {
+            tracing::info!("Switch Topology check: Setting initial unique switch device GPU PDIS");
+            unique_switch_device_gpu_pdis_set = Some(switch_device_gpu_pdis_set);
         }
     }
     Ok(())
@@ -224,10 +216,7 @@ mod tests {
         let nvml = Nvml::init().unwrap();
         let gpu_count = nvml.device_count().unwrap();
         if gpu_count != 8 {
-            println!(
-                "Skipping GPU topology check, expected 8 GPUs, got {}",
-                gpu_count
-            );
+            println!("Skipping GPU topology check, expected 8 GPUs, got {gpu_count}");
             return;
         }
         // let mut is_ppcie_multi_gpu_protected_enabled = true;
@@ -260,7 +249,7 @@ mod tests {
         let result = gpu_topology_check(
             &gpu_attestation_reports
                 .iter()
-                .map(|r| r.as_slice())
+                .map(Vec::as_slice)
                 .collect::<Vec<_>>(),
         )
         .expect("Failed to check GPU topology");
@@ -291,7 +280,7 @@ mod tests {
         let unique_switch_pdis_set = gpu_topology_check(
             &gpu_attestation_reports
                 .iter()
-                .map(|r| r.as_slice())
+                .map(Vec::as_slice)
                 .collect::<Vec<_>>(),
         )
         .expect("Failed to check GPU topology");
@@ -301,15 +290,15 @@ mod tests {
         // NVSwitch Topology Check
         let start_time = std::time::Instant::now();
         let nscq = nscq::nscq_handler::NscqHandler::new().expect("Failed to initialize NSCQ");
-        let nonce = rand::thread_rng().gen::<[u8; 32]>();
         let num_gpus = gpu_count as usize;
+        let mut nonce = rand::thread_rng().gen::<[u8; 32]>();
         let switch_attestation_reports = nscq
-            .get_all_switch_attestation_report(&nonce)
+            .get_all_switch_attestation_report(&mut nonce)
             .expect("Failed to get all switch attestation reports");
         let result = switch_topology_check(
             &switch_attestation_reports
                 .values()
-                .map(|report| report.as_slice())
+                .map(<[u8; 8192]>::as_slice)
                 .collect::<Vec<_>>(),
             num_gpus,
             unique_switch_pdis_set,

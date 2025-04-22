@@ -96,8 +96,8 @@ pub async fn verify_gpu_attestation(
         service_key,
         timeout,
     } = remote_attestation_options;
-    let verifier_url = verifier_url.unwrap_or(REMOTE_GPU_VERIFIER_SERVICE_URL.to_string());
-    let allow_hold_cert = allow_hold_cert.unwrap_or(get_allow_hold_cert());
+    let verifier_url = verifier_url.unwrap_or_else(|| REMOTE_GPU_VERIFIER_SERVICE_URL.to_string());
+    let allow_hold_cert = allow_hold_cert.unwrap_or_else(get_allow_hold_cert);
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     if allow_hold_cert {
@@ -109,7 +109,7 @@ pub async fn verify_gpu_attestation(
     if let Some(ref service_key) = service_key {
         headers.insert(AUTHORIZATION, HeaderValue::from_str(service_key)?);
     }
-    let claims_version = claims_version.unwrap_or(DEFAULT_CLAIMS_VERSION.to_string());
+    let claims_version = claims_version.unwrap_or_else(|| DEFAULT_CLAIMS_VERSION.to_string());
     let payload = json!({
         NONCE_KEY: nonce,
         EVIDENCE_LIST_KEY: gpu_evidences,

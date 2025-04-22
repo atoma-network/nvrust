@@ -5,7 +5,8 @@ use super::types::{
 };
 
 /// Error codes for NSCQ operations.
-pub fn nscq_error_to_str(rc: NscqRc) -> &'static str {
+#[must_use]
+pub const fn nscq_error_to_str(rc: NscqRc) -> &'static str {
     match rc {
         0 => "NSCQ_RC_SUCCESS",
         1 => "NSCQ_RC_WARNING_RDT_INIT_FAILURE",
@@ -123,7 +124,7 @@ pub fn nscq_uuid_to_label(uuid: NscqUuid, flags: u32) -> Result<NscqLabel, NscqR
 pub fn nscq_session_path_observe(
     session: NscqSession,
     path: &str,
-    callback: NscqCallback,
+    callback: &NscqCallback,
     user_data: UserData,
     flags: u32,
 ) -> Result<(), NscqRc> {
@@ -160,7 +161,7 @@ pub fn nscq_session_path_observe(
 pub fn nscq_session_path_register_observer(
     session: NscqSession,
     path: &str,
-    callback: NscqCallback,
+    callback: &NscqCallback,
     user_data: UserData,
     flags: u32,
 ) -> Result<NscqObserver, NscqRc> {

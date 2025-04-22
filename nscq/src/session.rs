@@ -31,7 +31,7 @@ impl Session {
         for uuid in uuids {
             nscq_session_mount(session, uuid, flags)?;
         }
-        Ok(Session { session })
+        Ok(Self { session })
     }
 
     /// Mounts a UUID to the session.
@@ -74,7 +74,7 @@ impl Session {
     pub fn path_observe(
         &self,
         path: &str,
-        callback: NscqCallback,
+        callback: &NscqCallback,
         user_data: UserData,
         flags: u32,
     ) -> Result<(), NscqRc> {
@@ -97,7 +97,7 @@ impl Session {
     pub fn path_register_observer(
         &self,
         path: &str,
-        callback: NscqCallback,
+        callback: &NscqCallback,
         user_data: UserData,
         flags: u32,
     ) -> Result<NscqObserver, NscqRc> {

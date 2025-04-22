@@ -1,15 +1,15 @@
 use crate::error::{NvidiaRemoteAttestationError, Result};
 
-/// The expected length of the SPDM GET_MEASUREMENT request message part.
+/// The expected length of the SPDM `GET_MEASUREMENT` request message part.
 const LENGTH_OF_SPDM_GET_MEASUREMENT_REQUEST_MESSAGE: usize = 37;
 
-/// Extracts NVSwitch Platform Data Information (PDI) entries from a full GPU attestation report.
+/// Extracts `NVSwitch` `Platform Data Information` (PDI) entries from a full GPU attestation report.
 ///
 /// This function orchestrates the process of parsing an attestation report to find and extract
-/// individual NVSwitch PDI entries. It involves:
+/// individual `NVSwitch` `Platform Data Information` (PDI) entries. It involves:
 /// 1. Identifying the SPDM measurement portion of the report.
 /// 2. Locating the TLV-encoded opaque data within the SPDM measurement.
-/// 3. Searching the opaque data for the specific TLV entry containing concatenated NVSwitch PDI data
+/// 3. Searching the opaque data for the specific TLV entry containing concatenated `NVSwitch` `Platform Data Information` (PDI) data
 ///    (`OPAQUE_FIELD_ID_SWITCH_GPU_PDIS`).
 /// 4. Parsing the concatenated PDI data into distinct, fixed-size PDI entries.
 ///
@@ -20,13 +20,13 @@ const LENGTH_OF_SPDM_GET_MEASUREMENT_REQUEST_MESSAGE: usize = 37;
 /// # Returns
 ///
 /// Returns a `Result` containing a `Vec<[u8; opaque_data_field_size::PDI_DATA_FIELD_SIZE]>`,
-/// where each element is a fixed-size array representing a single NVSwitch PDI entry.
+/// where each element is a fixed-size array representing a single `NVSwitch` `Platform Data Information` (PDI) entry.
 ///
 /// # Errors
 ///
 /// This function can return several errors, originating from the different parsing steps:
 /// * `NvidiaRemoteAttestationError::InvalidReportLength`: If the input `report` is shorter than
-///   the expected minimum length for an SPDM GET_MEASUREMENT request message part.
+///   the expected minimum length for an SPDM `GET_MEASUREMENT` request message part.
 /// * Errors propagated from `compute_opaque_data_position` (e.g.,
 ///   `InvalidSpdmMeasurementLength`) if the SPDM measurement structure is invalid.
 /// * Errors propagated from `extract_switch_gpu_pdis_in_opaque_data` (e.g.,
@@ -165,7 +165,7 @@ fn extract_switch_gpu_pdis_in_opaque_data(opaque_data: &[u8]) -> Result<Vec<u8>>
 /// # Arguments
 ///
 /// * `spdm_measurement` - A byte slice representing the SPDM measurement response data,
-///   starting *after* the initial SPDM GET_MEASUREMENT request message part.
+///   starting *after* the initial SPDM `GET_MEASUREMENT` request message part.
 ///
 /// # Returns
 ///
