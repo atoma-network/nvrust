@@ -10,7 +10,7 @@ pub type NscqRc = i8;
 /// Session ID for the NSCQ API
 pub type NscqSession = *mut c_void;
 
-/// Trusted NVLink Mode (TNVL) status for the NSCQ API
+/// Trusted `NVLink` Mode (TNVL) status for the NSCQ API
 pub type NscqTnvlStatus = i8;
 
 /// Architecture for the NSCQ API
@@ -72,8 +72,8 @@ pub struct NscqLabel {
 }
 
 impl NscqLabel {
-    pub fn new() -> Self {
-        NscqLabel { data: [0; 64] }
+    pub const fn new() -> Self {
+        Self { data: [0; 64] }
     }
 }
 
@@ -93,7 +93,7 @@ pub type UuidCallback =
 pub type ArchitectureCallback =
     unsafe extern "C" fn(device: NscqUuid, rc: NscqRc, arch: NscqArch, user_data: UserData);
 
-/// Trusted NVLink Mode (TNVL) callback function type
+/// Trusted `NVLink` Mode (TNVL) callback function type
 pub type TnvlCallback =
     unsafe extern "C" fn(device: NscqUuid, rc: NscqRc, tnvl: NscqTnvlStatus, user_data: UserData);
 
@@ -126,11 +126,10 @@ impl NscqCallback {
     /// Converts the callback to a raw pointer.
     pub fn as_ptr(&self) -> *const c_void {
         match self {
-            NscqCallback::Uuid(callback) => *callback as *const _,
-            NscqCallback::Architecture(callback) => *callback as *const _,
-            NscqCallback::Tnvl(callback) => *callback as *const _,
-            NscqCallback::AttestationReport(callback) => *callback as *const _,
-            NscqCallback::AttestationCertificate(callback) => *callback as *const _,
+            Self::Uuid(callback) => *callback as *const _,
+            Self::Architecture(callback) | Self::Tnvl(callback) => *callback as *const _,
+            Self::AttestationReport(callback) => *callback as *const _,
+            Self::AttestationCertificate(callback) => *callback as *const _,
         }
     }
 }

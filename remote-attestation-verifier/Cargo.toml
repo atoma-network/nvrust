@@ -25,4 +25,3 @@ x509-parser = { workspace = true }
 [dev-dependencies]
 nvml-wrapper = { workspace = true }
 rand = { workspace = true }
-

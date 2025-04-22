@@ -45,8 +45,8 @@ fn generate_new_gpu_evidence() -> (Vec<DeviceEvidence>, String) {
 
 fn generate_new_nvswitch_evidence() -> (Vec<NvSwitchEvidence>, String) {
     let nscq = NscqHandler::new().expect("Failed to initialize NSCQ");
-    let nonce = rand::thread_rng().gen::<[u8; 32]>();
-    let evidence = collect_nvswitch_evidence(&nscq, &nonce).expect("Failed to get evidence");
+    let mut nonce = rand::thread_rng().gen::<[u8; 32]>();
+    let evidence = collect_nvswitch_evidence(&nscq, &mut nonce).expect("Failed to get evidence");
     (evidence, hex::encode(nonce))
 }
 
@@ -55,12 +55,12 @@ async fn test_attest_working_evidence() {
     let (evidence, nonce) = read_working_evidence();
     match verify_gpu_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
         Ok((attestation_passed, jwt)) => {
-            println!("Attestation passed: {}", attestation_passed);
-            println!("JWT: {}", jwt);
+            println!("Attestation passed: {attestation_passed}");
+            println!("JWT: {jwt}");
             assert!(attestation_passed);
         }
         Err(e) => {
-            panic!("Failed to attest remote: {}", e);
+            panic!("Failed to attest remote: {e}");
         }
     }
 }
@@ -70,11 +70,11 @@ async fn test_attest_new_gpu_evidence() {
     let (evidence, nonce) = generate_new_gpu_evidence();
     match verify_gpu_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
         Ok((attestation_passed, jwt)) => {
-            println!("Attestation passed: {}", attestation_passed);
-            println!("JWT: {}", jwt);
+            println!("Attestation passed: {attestation_passed}");
+            println!("JWT: {jwt}");
         }
         Err(e) => {
-            panic!("Failed to attest remote: {}", e);
+            panic!("Failed to attest remote: {e}");
         }
     }
 }
@@ -84,11 +84,11 @@ async fn test_attest_new_nvswitch_evidence() {
     let (evidence, nonce) = generate_new_nvswitch_evidence();
     match verify_nvswitch_attestation(&evidence, &nonce, AttestRemoteOptions::default()).await {
         Ok((attestation_passed, jwt)) => {
-            println!("Attestation passed: {}", attestation_passed);
-            println!("JWT: {}", jwt);
+            println!("Attestation passed: {attestation_passed}");
+            println!("JWT: {jwt}");
         }
         Err(e) => {
-            panic!("Failed to attest remote: {}", e);
+            panic!("Failed to attest remote: {e}");
         }
     }
 }
