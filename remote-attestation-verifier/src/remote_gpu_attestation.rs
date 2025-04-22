@@ -78,8 +78,13 @@ pub struct AttestRemoteOptions {
 ///     Ok(())
 /// }
 /// ```
-#[instrument(level = "debug", name = "attest_remote", skip_all)]
-pub async fn attest_remote(
+#[instrument(
+    level = "info",
+    name = "attest_remote",
+    skip(gpu_evidences, nonce, remote_attestation_options),
+    fields(nonce = %nonce)
+)]
+pub async fn verify_gpu_attestation(
     gpu_evidences: &[DeviceEvidence],
     nonce: &str,
     remote_attestation_options: AttestRemoteOptions,

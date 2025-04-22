@@ -273,7 +273,7 @@ impl NscqHandler {
         self.session.set_input(input_arg, nonce_len, 0)?;
 
         let user_data_ptr: *mut Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>> =
-            Box::into_raw(Box::new(Vec::new()));
+            Box::into_raw(Box::new(Vec::with_capacity(NSCQ_ATTESTATION_REPORT_SIZE)));
 
         let user_data_ffi: UserData = user_data_ptr as UserData;
 
