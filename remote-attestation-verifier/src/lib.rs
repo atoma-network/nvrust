@@ -15,4 +15,4 @@ pub mod utils;
 pub use errors::{AttestError, Result};
 pub use remote_gpu_attestation::verify_gpu_attestation;
 pub use remote_nvswitch_attestation::verify_nvswitch_attestation;
-pub use types::DeviceEvidence;
+pub use types::{DeviceEvidence, NvSwitchEvidence};
