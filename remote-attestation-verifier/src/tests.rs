@@ -45,8 +45,8 @@ fn generate_new_gpu_evidence() -> (Vec<DeviceEvidence>, String) {
 
 fn generate_new_nvswitch_evidence() -> (Vec<NvSwitchEvidence>, String) {
     let nscq = NscqHandler::new().expect("Failed to initialize NSCQ");
-    let mut nonce = rand::thread_rng().gen::<[u8; 32]>();
-    let evidence = collect_nvswitch_evidence(&nscq, &mut nonce).expect("Failed to get evidence");
+    let nonce = rand::thread_rng().gen::<[u8; 32]>();
+    let evidence = collect_nvswitch_evidence(&nscq, &nonce).expect("Failed to get evidence");
     (evidence, hex::encode(nonce))
 }
 

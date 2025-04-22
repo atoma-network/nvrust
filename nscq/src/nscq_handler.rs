@@ -275,12 +275,11 @@ impl NscqHandler {
     pub fn get_switch_attestation_report(
         &self,
         device: &str,
-        nonce: &mut [u8; 32],
+        nonce: &[u8; 32],
     ) -> Result<[u8; NSCQ_ATTESTATION_REPORT_SIZE], NscqRc> {
-        let nonce_ptr = nonce.as_mut_ptr().cast::<c_void>();
+        let nonce_ptr = nonce.as_ptr().cast::<c_void>();
         let nonce_len = u32::try_from(nonce.len()).expect("Nonce length is too large");
-        let input_arg = unsafe { &mut *nonce_ptr };
-        self.session.set_input(input_arg, nonce_len, 0)?;
+        self.session.set_input(nonce_ptr, nonce_len, 0)?;
 
         let user_data_ptr: *mut Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>> =
             Box::into_raw(Box::new(Vec::new()));
@@ -318,12 +317,11 @@ impl NscqHandler {
     /// * `NscqRc` - If there is an error retrieving the attestation report.
     pub fn get_all_switch_attestation_report(
         &self,
-        nonce: &mut [u8; 32],
+        nonce: &[u8; 32],
     ) -> Result<HashMap<String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]>, NscqRc> {
-        let nonce_ptr = nonce.as_mut_ptr().cast::<c_void>();
+        let nonce_ptr = nonce.as_ptr().cast::<c_void>();
         let nonce_len = u32::try_from(nonce.len()).expect("Nonce length is too large");
-        let input_arg = unsafe { &mut *nonce_ptr };
-        self.session.set_input(input_arg, nonce_len, 0)?;
+        self.session.set_input(nonce_ptr, nonce_len, 0)?;
 
         let user_data_ptr: *mut Vec<Result<(String, [u8; NSCQ_ATTESTATION_REPORT_SIZE]), NscqRc>> =
             Box::into_raw(Box::new(Vec::with_capacity(NSCQ_ATTESTATION_REPORT_SIZE)));

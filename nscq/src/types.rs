@@ -8,7 +8,7 @@ pub const NSCQ_CERTIFICATE_CERT_CHAIN_MAX_SIZE: usize = 0x1400;
 pub type NscqRc = i8;
 
 /// Session ID for the NSCQ API
-pub type NscqSession = *mut c_void;
+pub type NscqSession = *const c_void;
 
 /// Trusted `NVLink` Mode (TNVL) status for the NSCQ API
 pub type NscqTnvlStatus = i8;
@@ -17,10 +17,10 @@ pub type NscqTnvlStatus = i8;
 pub type NscqArch = i8;
 
 /// Observer ID for the NSCQ API
-pub type NscqObserver = *mut c_void;
+pub type NscqObserver = *const c_void;
 
 /// UUID for the NSCQ API
-pub type NscqUuid = *mut c_void;
+pub type NscqUuid = *const c_void;
 
 /// User data for the NSCQ API
 pub type UserData = *mut c_void;

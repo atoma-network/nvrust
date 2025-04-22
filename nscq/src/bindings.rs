@@ -128,7 +128,7 @@ pub static NSCQ_SESSION_OBSERVE: LazyLock<
 
 /// Lazy static symbol for the `nscq_session_set_input` function.
 pub static NSCQ_SESSION_SET_INPUT: LazyLock<
-    Symbol<'static, unsafe extern "C" fn(NscqSession, u32, &mut c_void, u32) -> NscqRc>,
+    Symbol<'static, unsafe extern "C" fn(NscqSession, u32, *const c_void, u32) -> NscqRc>,
 > = LazyLock::new(|| unsafe {
     LIB.get(b"nscq_session_set_input")
         .expect("Failed to load nscq_session_set_input function")

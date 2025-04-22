@@ -245,7 +245,7 @@ pub fn nscq_session_observe(session: NscqSession, flags: u32) -> Result<(), Nscq
 /// * `Ok(())` if successful, or an error code if it fails.
 pub fn nscq_session_set_input(
     session: NscqSession,
-    input_arg: &mut c_void,
+    input_arg: *const c_void,
     input_size: u32,
     flags: u32,
 ) -> Result<(), NscqRc> {

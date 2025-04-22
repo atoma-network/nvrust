@@ -291,9 +291,9 @@ mod tests {
         let start_time = std::time::Instant::now();
         let nscq = nscq::nscq_handler::NscqHandler::new().expect("Failed to initialize NSCQ");
         let num_gpus = gpu_count as usize;
-        let mut nonce = rand::thread_rng().gen::<[u8; 32]>();
+        let nonce = rand::thread_rng().gen::<[u8; 32]>();
         let switch_attestation_reports = nscq
-            .get_all_switch_attestation_report(&mut nonce)
+            .get_all_switch_attestation_report(&nonce)
             .expect("Failed to get all switch attestation reports");
         let result = switch_topology_check(
             &switch_attestation_reports

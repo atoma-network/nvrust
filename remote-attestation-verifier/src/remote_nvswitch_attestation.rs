@@ -41,7 +41,7 @@ use crate::{
 #[instrument(name = "collect_nvswitch_evidence", skip_all)]
 pub fn collect_nvswitch_evidence(
     nscq: &NscqHandler,
-    nonce: &mut [u8; 32],
+    nonce: &[u8; 32],
 ) -> Result<Vec<NvSwitchEvidence>> {
     let uuids = nscq.get_all_switch_uuid().map_err(NscqError::from)?;
     let mut evidence_vec = Vec::with_capacity(uuids.len());
